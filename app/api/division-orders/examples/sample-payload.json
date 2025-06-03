@@ -1,0 +1,34 @@
+{
+  "fileName": "MultiWell_DivisionOrder_2024.pdf",
+  "extractedData": {
+    "operator": "XYZ Energy Corporation",
+    "entity": "Blackrock Minerals LLC",
+    "effectiveDate": "2024-03-15",
+    "county": "Midland",
+    "wells": [
+      {
+        "wellName": "Bobcat 23-1H",
+        "propertyDescription": "Section 23, Block 4, 160 acres",
+        "royaltyInterest": 0.125,
+        "tractAcres": 160
+      },
+      {
+        "wellName": "Bobcat 23-2H",
+        "propertyDescription": "Section 23, Block 4, 160 acres",
+        "royaltyInterest": 0.125,
+        "tractAcres": 160
+      },
+      {
+        "wellName": "Bobcat 24-1H",
+        "propertyDescription": "Section 24, Block 4, 320 acres",
+        "royaltyInterest": 0.1875,
+        "tractAcres": 320
+      }
+    ],
+    "confidence": 0.95,
+    "additionalDetails": {
+      "leaseNumber": "L-12345",
+      "fieldName": "Permian Basin"
+    }
+  }
+} 
