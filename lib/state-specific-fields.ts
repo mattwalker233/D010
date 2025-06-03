@@ -1,115 +1,110 @@
 // State-specific field definitions for division orders
 
+import type { StateSpecificField } from "./types"
+
 interface StateFieldDefinition {
-  fields: Array<{
-    key: string
-    label: string
-    required: boolean
-    validation?: RegExp
-  }>
-  textDescription: string
-  formatNotes: string
+  stateCode: string
+  stateName: string
+  fields: StateSpecificField[]
+  sampleFields?: {
+    [key: string]: string
+  }
+  textDescription?: string
+  formatNotes?: string
 }
 
-const stateFields: Record<string, StateFieldDefinition> = {
-  // New Mexico
-  NM: {
+const stateFieldsData: StateFieldDefinition[] = [
+  {
+    stateCode: "TX",
+    stateName: "Texas",
     fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "meridian", label: "Meridian", required: true },
-      { key: "unitName", label: "Unit Name", required: false },
-      { key: "divisionOrderNumber", label: "Division Order Number", required: true },
-      { key: "ocdWellID", label: "OCD Well ID", required: true },
-      { key: "newMexicoStateLeaseNumber", label: "New Mexico State Lease Number", required: false },
-      { key: "blmLeaseNumber", label: "BLM Lease Number", required: false }
+      { id: "txRrcId", label: "Texas RRC ID", type: "text", required: true },
+      { id: "txCountyId", label: "County ID", type: "text", required: true },
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "block", label: "Block", type: "text", required: true },
+      { id: "survey", label: "Survey", type: "text", required: true },
+      { id: "abstract", label: "Abstract", type: "text", required: true }
     ],
-    textDescription: "Section, Township, Range format with New Mexico Principal Meridian",
-    formatNotes: "New Mexico division orders require Section, Township, and Range information. The New Mexico Principal Meridian should be specified."
-  },
-
-  // Texas
-  TX: {
-    fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "block", label: "Block", required: true },
-      { key: "survey", label: "Survey", required: true },
-      { key: "abstract", label: "Abstract", required: true },
-      { key: "railroadCommissionID", label: "Railroad Commission ID", required: true },
-      { key: "texasSeveranceTaxID", label: "Texas Severance Tax ID", required: false },
-      { key: "texasLeaseNumber", label: "Texas Lease Number", required: false }
-    ],
+    sampleFields: {
+      section: "Section 14",
+      block: "Block A",
+      survey: "H&TC RR Co Survey",
+      abstract: "A-123"
+    },
     textDescription: "Section, Block, Survey, and Abstract format",
-    formatNotes: "Texas division orders typically include Section, Block, and Survey information. Abstract numbers are required for proper legal description."
+    formatNotes: "Texas division orders typically include Section, Block, and Survey information. Abstract numbers are also commonly used."
   },
-
-  // Oklahoma
-  OK: {
+  {
+    stateCode: "NM",
+    stateName: "New Mexico",
     fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "spotting", label: "Spotting", required: true },
-      { key: "quarterSection", label: "Quarter Section", required: true },
-      { key: "occWellID", label: "OCC Well ID", required: true },
-      { key: "oklahomaTaxID", label: "Oklahoma Tax ID", required: true },
+      { id: "nmOcdId", label: "NM OCD ID", type: "text", required: true },
+      { id: "nmCountyId", label: "County ID", type: "text", required: true },
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true }
+    ],
+    sampleFields: {
+      section: "Section 14",
+      township: "Township 26S",
+      range: "Range 32E"
+    },
+    textDescription: "Section, Township, and Range format",
+    formatNotes: "New Mexico uses the Public Land Survey System (PLSS) with Section, Township, and Range."
+  },
+  {
+    stateCode: "OK",
+    stateName: "Oklahoma",
+    fields: [
+      { id: "okTaxId", label: "Oklahoma Tax ID", type: "text", required: true },
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true },
     ],
     sampleFields: {
       section: "Section 23",
       township: "Township 4N",
       range: "Range 3W",
-      spotting: "C NE/4",
-      quarterSection: "NE/4",
-      occWellID: "OK-WELL-12345",
-      oklahomaTaxID: "OK-TAX-67890",
-      legalDescription: "The Northeast Quarter (NE/4) of Section 23, Township 4N, Range 3W, Garfield County, Oklahoma",
     },
-    sampleCounty: "Garfield County",
-    sampleAPI: "35-047-45678",
-    textDescription: "Section 23, Township 4N, Range 3W",
-    formatNotes:
-      "Oklahoma division orders require Section, Township, and Range information. Spotting information (e.g., C NE/4) is often included for well locations.",
+    textDescription: "Section, Township, Range format with Indian Meridian",
+    formatNotes: "Oklahoma division orders require Section, Township, and Range information. The Indian Meridian is commonly used."
   },
-
-  // North Dakota
-  ND: {
+  {
+    stateCode: "ND",
+    stateName: "North Dakota",
     fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "quarterSection", label: "Quarter Section", required: true },
-      { key: "spacing", label: "Spacing", required: true },
-      { key: "ndicWellID", label: "NDIC Well ID", required: true },
-      { key: "northDakotaLeaseNumber", label: "North Dakota Lease Number", required: true },
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true },
+      { id: "quarterSection", label: "Quarter Section", type: "text", required: true },
+      { id: "spacing", label: "Spacing", type: "text", required: true },
+      { id: "ndicWellID", label: "NDIC Well ID", type: "text", required: true },
+      { id: "northDakotaLeaseNumber", label: "North Dakota Lease Number", type: "text", required: true },
     ],
     sampleFields: {
-      section: "Section 18",
+      section: "Section 14",
       township: "Township 152N",
-      range: "Range 102W",
+      range: "Range 96W",
       quarterSection: "SW/4",
       spacing: "1280-acre spacing unit",
       ndicWellID: "ND-WELL-12345",
       northDakotaLeaseNumber: "ND-LEASE-67890",
       legalDescription:
-        "The Southwest Quarter (SW/4) of Section 18, Township 152N, Range 102W, McKenzie County, North Dakota",
+        "The Southwest Quarter (SW/4) of Section 14, Township 152N, Range 96W, McKenzie County, North Dakota",
     },
-    sampleCounty: "McKenzie County",
-    sampleAPI: "33-053-45678",
-    textDescription: "Section 18, Township 152N, Range 102W",
+    textDescription: "Section 14, Township 152N, Range 96W",
     formatNotes:
       "North Dakota division orders require Section, Township, and Range information. Spacing unit size is often specified.",
-    validationErrors: ["Verify spacing unit size matches the legal description."],
   },
-
-  // Colorado
-  CO: {
+  {
+    stateCode: "CO",
+    stateName: "Colorado",
     fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "cogccWellID", label: "COGCC Well ID", required: true },
-      { key: "coloradoStateLeaseNumber", label: "Colorado State Lease Number", required: true },
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true },
+      { id: "cogccWellID", label: "COGCC Well ID", type: "text", required: true },
+      { id: "coloradoStateLeaseNumber", label: "Colorado State Lease Number", type: "text", required: true },
     ],
     sampleFields: {
       section: "Section 5",
@@ -119,24 +114,22 @@ const stateFields: Record<string, StateFieldDefinition> = {
       coloradoStateLeaseNumber: "CO-LEASE-67890",
       legalDescription: "Section 5, Township 20N, Range 5E, Denver County, Colorado",
     },
-    sampleCounty: "Denver County",
-    sampleAPI: "16-026-45678",
     textDescription: "Section 5, Township 20N, Range 5E",
     formatNotes:
       "Colorado division orders use Section, Township, and Range. COGCC Well ID is required for identification.",
   },
-
-  // Ohio
-  OH: {
+  {
+    stateCode: "OH",
+    stateName: "Ohio",
     fields: [
-      { key: "tract", label: "Tract", required: true },
-      { key: "lot", label: "Lot", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "quarterTownship", label: "Quarter Township", required: true },
-      { key: "taxParcelID", label: "Tax Parcel ID", required: true },
-      { key: "odnrWellID", label: "ODNR Well ID", required: true },
-      { key: "ohioLeaseNumber", label: "Ohio Lease Number", required: true },
-      { key: "ohioSeveranceTaxID", label: "Ohio Severance Tax ID", required: true },
+      { id: "tract", label: "Tract", type: "text", required: true },
+      { id: "lot", label: "Lot", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "quarterTownship", label: "Quarter Township", type: "text", required: true },
+      { id: "taxParcelID", label: "Tax Parcel ID", type: "text", required: true },
+      { id: "odnrWellID", label: "ODNR Well ID", type: "text", required: true },
+      { id: "ohioLeaseNumber", label: "Ohio Lease Number", type: "text", required: true },
+      { id: "ohioSeveranceTaxID", label: "Ohio Severance Tax ID", type: "text", required: true },
     ],
     sampleFields: {
       tract: "Tract 22",
@@ -149,22 +142,20 @@ const stateFields: Record<string, StateFieldDefinition> = {
       ohioSeveranceTaxID: "OH-STAX-54321",
       legalDescription: "Lot 12, Green Township, Belmont County, Ohio",
     },
-    sampleCounty: "Belmont County",
-    sampleAPI: "34-013-45678",
     textDescription: "Lot 12, Green Township",
     formatNotes:
       "Ohio uses a unique system based on the Original Land Survey with townships divided into quarters and lots. Tax parcel IDs are essential for property identification.",
   },
-
-  // West Virginia
-  WV: {
+  {
+    stateCode: "WV",
+    stateName: "West Virginia",
     fields: [
-      { key: "tract", label: "Tract", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "wvdepWellAPINumber", label: "WVDEP Well API Number", required: true },
-      { key: "westVirginiaLeaseNumber", label: "West Virginia Lease Number", required: true },
-      { key: "westVirginiaSeveranceTaxID", label: "West Virginia Severance Tax ID", required: true },
+      { id: "tract", label: "Tract", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true },
+      { id: "wvdepWellAPINumber", label: "WVDEP Well API Number", type: "text", required: true },
+      { id: "westVirginiaLeaseNumber", label: "West Virginia Lease Number", type: "text", required: true },
+      { id: "westVirginiaSeveranceTaxID", label: "West Virginia Severance Tax ID", type: "text", required: true },
     ],
     sampleFields: {
       tract: "Tract 30",
@@ -175,24 +166,22 @@ const stateFields: Record<string, StateFieldDefinition> = {
       westVirginiaSeveranceTaxID: "WV-STAX-54321",
       legalDescription: "Tract 30, Township 10N, Range 2E, Kanawha County, West Virginia",
     },
-    sampleCounty: "Kanawha County",
-    sampleAPI: "36-018-45678",
     textDescription: "Tract 30, Township 10N, Range 2E",
     formatNotes:
       "West Virginia division orders use Tract, Township, and Range. WVDEP Well API Number is required for identification.",
   },
-
-  // Pennsylvania
-  PA: {
+  {
+    stateCode: "PA",
+    stateName: "Pennsylvania",
     fields: [
-      { key: "tract", label: "Tract", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "warrantName", label: "Warrant Name", required: true },
-      { key: "taxParcelID", label: "Tax Parcel ID", required: true },
-      { key: "deedBook", label: "Deed Book", required: true },
-      { key: "padepWellAPINumber", label: "PA DEP Well API Number", required: true },
-      { key: "pennsylvaniaLeaseNumber", label: "Pennsylvania Lease Number", required: true },
-      { key: "pennsylvaniaWellPermitNumber", label: "Pennsylvania Well Permit Number", required: true },
+      { id: "tract", label: "Tract", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "warrantName", label: "Warrant Name", type: "text", required: true },
+      { id: "taxParcelID", label: "Tax Parcel ID", type: "text", required: true },
+      { id: "deedBook", label: "Deed Book", type: "text", required: true },
+      { id: "padepWellAPINumber", label: "PA DEP Well API Number", type: "text", required: true },
+      { id: "pennsylvaniaLeaseNumber", label: "Pennsylvania Lease Number", type: "text", required: true },
+      { id: "pennsylvaniaWellPermitNumber", label: "Pennsylvania Well Permit Number", type: "text", required: true },
     ],
     sampleFields: {
       tract: "Tract 45",
@@ -205,21 +194,19 @@ const stateFields: Record<string, StateFieldDefinition> = {
       pennsylvaniaWellPermitNumber: "PA-PERM-54321",
       legalDescription: "Tract 45, Washington Township, Washington County, Pennsylvania",
     },
-    sampleCounty: "Washington County",
-    sampleAPI: "37-125-45678",
     textDescription: "Tract 45, Washington Township",
     formatNotes:
       "Pennsylvania division orders typically use tract numbers and township names rather than the Section, Township, Range system. Deed book references are important for title verification.",
   },
-
-  // Louisiana
-  LA: {
+  {
+    stateCode: "LA",
+    stateName: "Louisiana",
     fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "parish", label: "Parish", required: true },
-      { key: "unitDesignation", label: "Unit Designation", required: true },
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true },
+      { id: "parish", label: "Parish", type: "text", required: true },
+      { id: "unitDesignation", label: "Unit Designation", type: "text", required: true },
     ],
     sampleFields: {
       section: "Section 4",
@@ -229,23 +216,21 @@ const stateFields: Record<string, StateFieldDefinition> = {
       unitDesignation: "HA RA SU",
       legalDescription: "Section 4, Township 12S, Range 4E, Caddo Parish, Louisiana",
     },
-    sampleCounty: "Caddo Parish",
-    sampleAPI: "17-017-45678",
     textDescription: "Section 4, Township 12S, Range 4E",
     formatNotes:
       "Louisiana division orders use Section, Township, and Range, but refer to counties as 'parishes'. Unit designations are often included for unitized fields.",
   },
-
-  // Wyoming
-  WY: {
+  {
+    stateCode: "WY",
+    stateName: "Wyoming",
     fields: [
-      { key: "section", label: "Section", required: true },
-      { key: "township", label: "Township", required: true },
-      { key: "range", label: "Range", required: true },
-      { key: "quarterSection", label: "Quarter Section", required: false },
-      { key: "wogccPermitNumber", label: "WOGCC Permit Number", required: true },
-      { key: "wyomingLeaseNumber", label: "Wyoming Lease Number", required: false },
-      { key: "federalUnitName", label: "Federal Unit Name", required: false }
+      { id: "section", label: "Section", type: "text", required: true },
+      { id: "township", label: "Township", type: "text", required: true },
+      { id: "range", label: "Range", type: "text", required: true },
+      { id: "quarterSection", label: "Quarter Section", type: "text", required: false },
+      { id: "wogccPermitNumber", label: "WOGCC Permit Number", type: "text", required: true },
+      { id: "wyomingLeaseNumber", label: "Wyoming Lease Number", type: "text", required: false },
+      { id: "federalUnitName", label: "Federal Unit Name", type: "text", required: false }
     ],
     sampleFields: {
       section: "Section 12",
@@ -257,15 +242,17 @@ const stateFields: Record<string, StateFieldDefinition> = {
       federalUnitName: "Buffalo Federal Unit",
       legalDescription: "Section 12, Township 45N, Range 72W, Campbell County, Wyoming"
     },
-    sampleCounty: "Campbell County",
-    sampleAPI: "49-005-45678",
     textDescription: "Section 12, Township 45N, Range 72W",
     formatNotes: "Wyoming division orders use Section, Township, and Range. WOGCC Permit Numbers are required for well identification. Federal Unit Names are important for federal leases."
   }
-}
+]
+
+export const stateFields = stateFieldsData
 
 export function getStateSpecificFields(stateCode: string): StateFieldDefinition {
-  return stateFields[stateCode] || stateFields.TX // Default to Texas if state not found
+  const state = stateFields.find((s) => s.stateCode === stateCode)
+  if (!state) {
+    throw new Error(`No field definitions found for state code: ${stateCode}`)
+  }
+  return state
 }
-
-export { stateFields, type StateFieldDefinition };

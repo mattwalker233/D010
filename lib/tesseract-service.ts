@@ -1,4 +1,5 @@
-import { createWorker } from 'tesseract.js';
+import { createWorker, PSM } from 'tesseract.js';
+import type { ExtractedData } from './types';
 
 export interface TesseractResponse {
   text: string;
@@ -107,4 +108,122 @@ export async function processDocument(buffer: Buffer): Promise<TesseractResponse
       await worker.terminate();
     }
   }
+}
+
+export async function extractTextFromImage(buffer: Buffer): Promise<ExtractedData> {
+  console.log('Starting OCR processing...');
+  const worker = await createWorker();
+
+  try {
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    
+    const { data: { text, confidence } } = await worker.recognize(buffer);
+    console.log('OCR processing complete. Confidence:', confidence);
+
+    // Extract specific fields from the text
+    const extractedData = extractFieldsFromText(text);
+    
+    return {
+      text: text || '',
+      confidence: confidence || 0,
+      tractSize: extractedData.tractSize || '',
+      royaltyInterest: extractedData.royaltyInterest || '',
+      sectionNumber: extractedData.sectionNumber || '',
+      county: extractedData.county || '',
+      operator: extractedData.operator || '',
+      propertyDescription: extractedData.propertyDescription || '',
+      entity: extractedData.entity || '',
+      effectiveDate: extractedData.effectiveDate || '',
+      preparedDate: extractedData.preparedDate || '',
+      ownerNames: extractedData.ownerNames || [],
+      wellNames: extractedData.wellNames || [],
+      totalTractAcreage: extractedData.totalTractAcreage || 0,
+      averageRoyaltyRate: extractedData.averageRoyaltyRate || 0,
+      sectionBreakdowns: extractedData.sectionBreakdowns || [],
+      allocationValid: extractedData.allocationValid || false,
+      confidenceScores: extractedData.confidenceScores || {}
+    };
+  } catch (error) {
+    console.error('Error during OCR processing:', error);
+    throw error;
+  } finally {
+    await worker.terminate();
+  }
+}
+
+function extractFieldsFromText(text: string): Partial<ExtractedData> {
+  // Initialize extracted data with default values
+  const extractedData: Partial<ExtractedData> = {
+    tractSize: '',
+    royaltyInterest: '',
+    sectionNumber: '',
+    county: '',
+    ownerNames: [],
+    wellNames: [],
+  };
+
+  // Extract tract size (looking for patterns like "320 acres" or "160.5 acres")
+  const tractSizeMatch = text.match(/(\d+(?:\.\d+)?)\s*acres?/i);
+  if (tractSizeMatch) {
+    extractedData.tractSize = tractSizeMatch[0];
+    extractedData.totalTractAcreage = parseFloat(tractSizeMatch[1]);
+  }
+
+  // Extract royalty interest (looking for patterns like "18.75%" or "3/16")
+  const royaltyMatch = text.match(/(\d+(?:\.\d+)?%)|(\d+\/\d+)/);
+  if (royaltyMatch) {
+    extractedData.royaltyInterest = royaltyMatch[0];
+    // Convert fraction to decimal if necessary
+    if (royaltyMatch[2]) {
+      const [numerator, denominator] = royaltyMatch[2].split('/').map(Number);
+      extractedData.averageRoyaltyRate = numerator / denominator;
+    } else if (royaltyMatch[1]) {
+      extractedData.averageRoyaltyRate = parseFloat(royaltyMatch[1]) / 100;
+    }
+  }
+
+  // Extract section number (looking for patterns like "Section 14" or "Sec. 23")
+  const sectionMatch = text.match(/(?:section|sec\.?)\s*(\d+)/i);
+  if (sectionMatch) {
+    extractedData.sectionNumber = `Section ${sectionMatch[1]}`;
+  }
+
+  // Extract county (looking for "County" or "Parish")
+  const countyMatch = text.match(/([A-Za-z]+)\s+(?:County|Parish)/i);
+  if (countyMatch) {
+    extractedData.county = countyMatch[0];
+  }
+
+  // Extract operator name (looking for common operator indicators)
+  const operatorMatch = text.match(/(?:operated by|operator:?)\s+([A-Za-z\s]+)(?:,|\.|$)/i);
+  if (operatorMatch) {
+    extractedData.operator = operatorMatch[1].trim();
+  }
+
+  // Extract property description
+  const propertyMatch = text.match(/(?:property description:?|legal description:?)\s+([^.]+)/i);
+  if (propertyMatch) {
+    extractedData.propertyDescription = propertyMatch[1].trim();
+  }
+
+  // Extract effective date
+  const effectiveDateMatch = text.match(/(?:effective date:?|as of:?)\s+(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/i);
+  if (effectiveDateMatch) {
+    extractedData.effectiveDate = effectiveDateMatch[1];
+  }
+
+  // Extract prepared date
+  const preparedDateMatch = text.match(/(?:prepared:?|dated:?)\s+(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2})/i);
+  if (preparedDateMatch) {
+    extractedData.preparedDate = preparedDateMatch[1];
+  }
+
+  // Extract entity name
+  const entityMatch = text.match(/(?:entity:?|company:?|corporation:?)\s+([A-Za-z\s,\.]+)(?:,|\.|$)/i);
+  if (entityMatch) {
+    extractedData.entity = entityMatch[1].trim();
+  }
+
+  return extractedData;
 } 

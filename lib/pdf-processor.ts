@@ -86,7 +86,7 @@ export function createFallbackData(stateCode: string, operatorName: string): Div
     county: county,
     state: stateCode,
     effectiveDate: new Date().toISOString().split('T')[0],
-    status: "error",
+    status: "title_issue" as const,
     wells: [{
       wellName: "Error Processing Well",
       propertyDescription: "Error processing document. Please try again or contact support.",

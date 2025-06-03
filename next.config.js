@@ -1,15 +1,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    // Tesseract.js worker configuration
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      path: false,
-      worker_threads: false,
-    };
-
-    return config;
+  output: 'standalone',
+  images: {
+    unoptimized: true,
+  },
+  webpack: (config, { isServer }) => {
+    // Fixes npm packages that depend on `fs` module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        worker_threads: false,
+        canvas: false,
+      }
+    }
+    return config
+  },
+  // Remove experimental.serverActions as it's now default
+  experimental: {
+    serverComponentsExternalPackages: ['canvas', 'pdf.js-extract']
   },
   async headers() {
     return [

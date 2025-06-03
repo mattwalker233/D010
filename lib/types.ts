@@ -26,6 +26,11 @@ export interface ExtractedData {
   royaltyInterest: string;
   sectionNumber: string;
   county: string;
+  operator?: string;
+  propertyDescription?: string;
+  entity?: string;
+  effectiveDate?: string;
+  preparedDate?: string;
   ownerNames?: string[];
   wellNames?: string[];
   totalTractAcreage?: number;
