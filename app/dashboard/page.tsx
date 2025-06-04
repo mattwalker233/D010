@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { stateData } from "@/lib/state-data"
 import { useState } from "react"
 import { Textarea } from "@/components/ui/textarea"
-import { FileSpreadsheet, PencilIcon } from "lucide-react"
+import { FileSpreadsheet, PencilIcon, Search } from "lucide-react"
 import * as XLSX from 'xlsx';
+import { Input } from "@/components/ui/input"
 
 interface DivisionOrder {
   id: string;
@@ -20,6 +21,7 @@ interface DivisionOrder {
   county: string;
   status: string;
   notes: string;
+  ownerNumber: string;
 }
 
 // Sample division order data for demonstration
@@ -35,7 +37,8 @@ const divisionOrders: DivisionOrder[] = [
     state: "TX",
     county: "Midland",
     status: "in_process",
-    notes: "Waiting on title opinion"
+    notes: "Waiting on title opinion",
+    ownerNumber: "OWN-001"
   },
   {
     id: "DO-2024-002",
@@ -48,7 +51,8 @@ const divisionOrders: DivisionOrder[] = [
     state: "TX",
     county: "Reeves",
     status: "title_issue",
-    notes: "Missing heirship documentation"
+    notes: "Missing heirship documentation",
+    ownerNumber: "OWN-002"
   },
   {
     id: "DO-2024-003",
@@ -61,7 +65,8 @@ const divisionOrders: DivisionOrder[] = [
     state: "NM",
     county: "Lea",
     status: "contact_operator",
-    notes: "Need updated division order form"
+    notes: "Need updated division order form",
+    ownerNumber: "OWN-003"
   },
 ];
 
@@ -71,18 +76,32 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<DivisionOrder[]>(divisionOrders);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteText, setNoteText] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Filter orders based on state and status
+  // Filter orders based on state, status, and search query
   const getFilteredOrders = (statusFilter: string = selectedStatus) => {
     return orders
       .filter(order => selectedState === "all" || order.state === selectedState)
-      .filter(order => statusFilter === "all" || order.status === statusFilter);
+      .filter(order => statusFilter === "all" || order.status === statusFilter)
+      .filter(order => {
+        const query = searchQuery.toLowerCase();
+        return (
+          order.operator.toLowerCase().includes(query) ||
+          order.entity.toLowerCase().includes(query) ||
+          order.wellName.toLowerCase().includes(query) ||
+          order.propertyDescription.toLowerCase().includes(query) ||
+          order.county.toLowerCase().includes(query) ||
+          order.notes.toLowerCase().includes(query) ||
+          order.ownerNumber.toLowerCase().includes(query)
+        );
+      });
   };
 
-  // Clear filters
+  // Clear filters and search
   const clearFilters = () => {
     setSelectedState("all");
     setSelectedStatus("all");
+    setSearchQuery("");
   };
 
   // Status display helper
@@ -122,6 +141,7 @@ export default function DashboardPage() {
   const handleExportToExcel = () => {
     const exportData = getFilteredOrders().map(order => ({
       'ID': order.id,
+      'Owner #': order.ownerNumber,
       'Operator': order.operator,
       'Entity': order.entity,
       'Well/Property': order.wellName,
@@ -143,8 +163,9 @@ export default function DashboardPage() {
   const OrdersTable = ({ orders }: { orders: DivisionOrder[] }) => (
     <div className="rounded-md border">
       <div className="p-4">
-        <div className="grid grid-cols-9 gap-4 font-medium text-sm">
+        <div className="grid grid-cols-10 gap-4 font-medium text-sm">
           <div>Status</div>
+          <div>Owner #</div>
           <div>Operator</div>
           <div>Entity</div>
           <div>Well/Property</div>
@@ -157,7 +178,7 @@ export default function DashboardPage() {
       </div>
       <div className="divide-y">
         {orders.map((order) => (
-          <div key={order.id} className="grid grid-cols-9 gap-4 p-4 hover:bg-muted/50">
+          <div key={order.id} className="grid grid-cols-10 gap-4 p-4 hover:bg-muted/50">
             <div className="flex gap-2">
               <select
                 value={order.status}
@@ -171,6 +192,7 @@ export default function DashboardPage() {
                 <option value="contact_operator">Contact Operator</option>
               </select>
             </div>
+            <div className="text-sm font-medium">{order.ownerNumber}</div>
             <div>{order.operator}</div>
             <div>{order.entity}</div>
             <div>{order.wellName}</div>
@@ -232,70 +254,69 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="container mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Division Orders</CardTitle>
-                <CardDescription>
-                  {selectedState === "all" 
-                    ? "All division orders across states" 
-                    : `Division orders for ${stateData.find(s => s.code === selectedState)?.name || selectedState}`}
-                </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleExportToExcel}
-                title="Export to Excel"
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-              </Button>
-            </div>
+    <div className="container mx-auto py-6 space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Division Orders Dashboard</h1>
+        <Button onClick={handleExportToExcel}>
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          Export to Excel
+        </Button>
+      </div>
 
-            <div className="flex gap-4">
-              <select
-                className="border rounded p-2 min-w-[200px]"
-                value={selectedState}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedState(e.target.value)}
-              >
-                <option value="all">All States</option>
-                {stateData.map(state => (
-                  <option key={state.code} value={state.code}>
-                    {state.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                className="border rounded p-2 min-w-[200px]"
-                value={selectedStatus}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedStatus(e.target.value)}
-              >
-                <option value="all">All Statuses</option>
-                <option value="in_process">In Process</option>
-                <option value="in_pay">In Pay</option>
-                <option value="not_received">Not Received</option>
-                <option value="title_issue">Title Issue</option>
-                <option value="contact_operator">Contact Operator</option>
-              </select>
-
-              <Button
-                variant="outline"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </Button>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by owner #, operator, entity, well name, or notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
           </div>
-        </CardHeader>
+          <select
+            value={selectedState}
+            onChange={(e) => setSelectedState(e.target.value)}
+            className="border rounded-md px-3 py-2"
+          >
+            <option value="all">All States</option>
+            {stateData.map((state) => (
+              <option key={state.code} value={state.code}>
+                {state.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="border rounded-md px-3 py-2"
+          >
+            <option value="all">All Statuses</option>
+            <option value="in_process">In Process</option>
+            <option value="in_pay">In Pay</option>
+            <option value="not_received">Not Received</option>
+            <option value="title_issue">Title Issue</option>
+            <option value="contact_operator">Contact Operator</option>
+          </select>
+          <Button variant="outline" onClick={clearFilters}>
+            Clear Filters
+          </Button>
+        </div>
 
-        <CardContent>
-          <OrdersTable orders={getFilteredOrders(selectedStatus)} />
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Division Orders</CardTitle>
+            <CardDescription>
+              {getFilteredOrders().length} orders found
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <OrdersTable orders={getFilteredOrders()} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
