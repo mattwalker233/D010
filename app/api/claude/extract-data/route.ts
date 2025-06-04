@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { extractDivisionOrderData } from "@/lib/claude-client"
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, stateCode, confidence } = await request.json()
+    const { text, stateCode } = await request.json()
 
     if (!text || !stateCode) {
       return NextResponse.json(
@@ -11,27 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Mock data extraction
-    // In production, this would call the Claude API
-    const extractedData = {
-      operator: "Sample Oil & Gas",
-      entity: "Sample LLC",
-      effectiveDate: new Date().toISOString().split('T')[0],
-      county: getDefaultCounty(stateCode),
-      wells: [
-        {
-          wellName: "Test Well #1",
-          propertyDescription: "Section 14, Block A",
-          royaltyInterest: 0.125,
-          tractAcres: 320
-        }
-      ],
-      confidence: confidence || 0.95,
-      additionalDetails: {
-        documentType: "Division Order",
-        processingDate: new Date().toISOString()
-      }
-    }
+    const extractedData = await extractDivisionOrderData(text, stateCode)
 
     return NextResponse.json({
       success: true,
