@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { extractTextFromPDF } from "@/lib/pdf-processor"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,8 +12,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields: file and stateCode" }, { status: 400 })
     }
 
-    // For now, return a placeholder response
-    // This will be replaced with actual OCR processing later
+    // Convert File to Buffer
+    const buffer = Buffer.from(await file.arrayBuffer())
+    
+    // Extract text from PDF
+    const pdfData = await extractTextFromPDF(buffer)
+
+    // Prepare the response with extracted data
     const keyInfo = {
       tractSize: null as string | null,
       royaltyInterest: null as string | null,
@@ -23,11 +29,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      ocrData: {
-        text: "OCR processing will be implemented",
-        confidence: 0,
-        formFields: {}
-      },
+      pdfData,
       extractedInfo: keyInfo
     })
   } catch (error) {

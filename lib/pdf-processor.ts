@@ -4,6 +4,7 @@
  */
 
 import type { DivisionOrder } from './types';
+import { PDFExtract } from 'pdf.js-extract';
 
 interface ExtractedText {
   text: string;
@@ -26,33 +27,57 @@ interface ProcessedData {
   confidenceScore: number;
 }
 
+export interface ExtractedPDFData {
+  text: string;
+  pageCount: number;
+  metadata?: {
+    info?: {
+      PDFFormatVersion?: string;
+      IsAcroFormPresent?: boolean;
+      IsCollectionPresent?: boolean;
+      IsLinearized?: boolean;
+      IsXFAPresent?: boolean;
+      Title?: string;
+      Author?: string;
+      Subject?: string;
+      Keywords?: string;
+      Creator?: string;
+      Producer?: string;
+      CreationDate?: string;
+      ModDate?: string;
+    };
+  };
+}
+
 /**
- * Process a PDF file and extract structured data using OCR and Claude
+ * Process a PDF file and extract text and metadata
  * @param buffer PDF file buffer
- * @param fileType File MIME type
- * @param stateCode Two-letter state code
- * @returns Processed division order data
+ * @returns Extracted PDF data including text and metadata
  */
-export async function processPDF(buffer: Buffer, fileType: string, stateCode: string): Promise<ProcessedData> {
-  if (!process.env.CLAUDE_API_KEY) {
-    throw new Error('Claude API key not configured. Please set CLAUDE_API_KEY in your environment variables.');
-  }
-
-  if (!process.env.OCR_API_KEY) {
-    throw new Error('OCR API key not configured. Please set OCR_API_KEY in your environment variables.');
-  }
-
+export async function extractTextFromPDF(buffer: Buffer): Promise<ExtractedPDFData> {
   try {
-    // TODO: Implement OCR processing
-    // const extractedText = await performOCR(buffer);
+    const pdfExtract = new PDFExtract();
+    const data = await pdfExtract.extractBuffer(buffer);
 
-    // TODO: Process extracted text with Claude
-    // const structuredData = await processWithClaude(extractedText.text, stateCode);
+    // Combine all page content into a single string
+    const fullText = data.pages
+      .map(page => 
+        page.content
+          .map(item => item.str)
+          .join(' ')
+      )
+      .join('\n\n');
 
-    throw new Error('PDF processing not yet implemented. Please configure OCR and Claude API integration.');
+    return {
+      text: fullText,
+      pageCount: data.pages.length,
+      metadata: {
+        info: data.meta?.info
+      }
+    };
   } catch (error) {
-    console.error('Error processing PDF:', error);
-    throw error;
+    console.error('Error extracting text from PDF:', error);
+    throw new Error('Failed to extract text from PDF');
   }
 }
 
