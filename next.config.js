@@ -10,16 +10,25 @@ const nextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
-        path: false,
-        worker_threads: false,
-        canvas: false,
-      }
+        net: false,
+        tls: false,
+        encoding: false,
+      };
     }
-    return config
-  },
-  // Remove experimental.serverActions as it's now default
-  experimental: {
-    serverComponentsExternalPackages: ['canvas', 'pdf.js-extract']
+
+    // Handle worker scripts
+    config.module.rules.push({
+      test: /\.worker\.(js|ts)$/,
+      use: { loader: 'worker-loader' },
+    });
+
+    // Handle WASM files
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+    };
+
+    return config;
   },
   async headers() {
     return [

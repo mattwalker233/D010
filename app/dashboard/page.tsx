@@ -1,321 +1,298 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { stateData } from "@/lib/state-data"
-import { useState } from "react"
-import { Textarea } from "@/components/ui/textarea"
-import { FileSpreadsheet, PencilIcon, Search } from "lucide-react"
-import * as XLSX from 'xlsx';
-import { Input } from "@/components/ui/input"
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { FiFile, FiRefreshCw } from 'react-icons/fi';
 
-interface DivisionOrder {
-  id: string;
+interface DashboardRecord {
+  propertyName: string;
   operator: string;
   entity: string;
-  wellName: string;
   propertyDescription: string;
-  royaltyInterest: string;
-  effectiveDate: string;
-  state: string;
+  decimalInterest: string;
   county: string;
+  state: string;
+  effectiveDate: string;
   status: string;
   notes: string;
-  ownerNumber: string;
 }
 
-// Sample division order data for demonstration
-const divisionOrders: DivisionOrder[] = [
-  {
-    id: "DO-2024-001",
-    operator: "Devon Energy",
-    entity: "Blackrock Minerals LLC",
-    wellName: "Bobcat 23-1H",
-    propertyDescription: "Section 23, Block 4, 160 acres",
-    royaltyInterest: "0.125",
-    effectiveDate: "2024-01-15",
-    state: "TX",
-    county: "Midland",
-    status: "in_process",
-    notes: "Waiting on title opinion",
-    ownerNumber: "OWN-001"
-  },
-  {
-    id: "DO-2024-002",
-    operator: "Pioneer Natural Resources",
-    entity: "Crown Minerals Trust",
-    wellName: "Eagle Ford 14-2H",
-    propertyDescription: "Section 14, Block 2, 80 acres",
-    royaltyInterest: "0.1875",
-    effectiveDate: "2024-01-14",
-    state: "TX",
-    county: "Reeves",
-    status: "title_issue",
-    notes: "Missing heirship documentation",
-    ownerNumber: "OWN-002"
-  },
-  {
-    id: "DO-2024-003",
-    operator: "Occidental",
-    entity: "Desert Holdings LLC",
-    wellName: "Permian Vista 5-3H",
-    propertyDescription: "Section 5, Block 3, 320 acres",
-    royaltyInterest: "0.25",
-    effectiveDate: "2024-01-13",
-    state: "NM",
-    county: "Lea",
-    status: "contact_operator",
-    notes: "Need updated division order form",
-    ownerNumber: "OWN-003"
-  },
-];
+// State abbreviation mapping
+const STATE_ABBREVIATIONS: { [key: string]: string } = {
+  'Alabama': 'AL',
+  'Alaska': 'AK',
+  'Arizona': 'AZ',
+  'Arkansas': 'AR',
+  'California': 'CA',
+  'Colorado': 'CO',
+  'Connecticut': 'CT',
+  'Delaware': 'DE',
+  'Florida': 'FL',
+  'Georgia': 'GA',
+  'Hawaii': 'HI',
+  'Idaho': 'ID',
+  'Illinois': 'IL',
+  'Indiana': 'IN',
+  'Iowa': 'IA',
+  'Kansas': 'KS',
+  'Kentucky': 'KY',
+  'Louisiana': 'LA',
+  'Maine': 'ME',
+  'Maryland': 'MD',
+  'Massachusetts': 'MA',
+  'Michigan': 'MI',
+  'Minnesota': 'MN',
+  'Mississippi': 'MS',
+  'Missouri': 'MO',
+  'Montana': 'MT',
+  'Nebraska': 'NE',
+  'Nevada': 'NV',
+  'New Hampshire': 'NH',
+  'New Jersey': 'NJ',
+  'New Mexico': 'NM',
+  'New York': 'NY',
+  'North Carolina': 'NC',
+  'North Dakota': 'ND',
+  'Ohio': 'OH',
+  'Oklahoma': 'OK',
+  'Oregon': 'OR',
+  'Pennsylvania': 'PA',
+  'Rhode Island': 'RI',
+  'South Carolina': 'SC',
+  'South Dakota': 'SD',
+  'Tennessee': 'TN',
+  'Texas': 'TX',
+  'Utah': 'UT',
+  'Vermont': 'VT',
+  'Virginia': 'VA',
+  'Washington': 'WA',
+  'West Virginia': 'WV',
+  'Wisconsin': 'WI',
+  'Wyoming': 'WY',
+  'District of Columbia': 'DC'
+};
 
-export default function DashboardPage() {
-  const [selectedState, setSelectedState] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [orders, setOrders] = useState<DivisionOrder[]>(divisionOrders);
-  const [editingNote, setEditingNote] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+// Function to get state abbreviation
+const getStateAbbreviation = (state: string): string => {
+  if (!state) return 'N/A';
+  const normalizedState = state.trim();
+  return STATE_ABBREVIATIONS[normalizedState] || normalizedState;
+};
 
-  // Filter orders based on state, status, and search query
-  const getFilteredOrders = (statusFilter: string = selectedStatus) => {
-    return orders
-      .filter(order => selectedState === "all" || order.state === selectedState)
-      .filter(order => statusFilter === "all" || order.status === statusFilter)
-      .filter(order => {
-        const query = searchQuery.toLowerCase();
-        return (
-          order.operator.toLowerCase().includes(query) ||
-          order.entity.toLowerCase().includes(query) ||
-          order.wellName.toLowerCase().includes(query) ||
-          order.propertyDescription.toLowerCase().includes(query) ||
-          order.county.toLowerCase().includes(query) ||
-          order.notes.toLowerCase().includes(query) ||
-          order.ownerNumber.toLowerCase().includes(query)
-        );
-      });
+export default function Dashboard() {
+  const [records, setRecords] = useState<DashboardRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingNotes, setEditingNotes] = useState<{ [key: number]: string }>({});
+  const router = useRouter();
+
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      console.log('Fetching dashboard data...');
+      const response = await fetch('http://localhost:8000/api/dashboard');
+      console.log('Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('Dashboard data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch dashboard data');
+      }
+      
+      if (!data.records) {
+        throw new Error('No records found in response');
+      }
+      
+      setRecords(data.records);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Clear filters and search
-  const clearFilters = () => {
-    setSelectedState("all");
-    setSelectedStatus("all");
-    setSearchQuery("");
-  };
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  // Status display helper
-  const getStatusDisplay = (status: string) => {
-    const statusMap: { [key: string]: { label: string; color: string } } = {
-      in_process: { label: "In Process", color: "bg-blue-50 text-blue-700" },
-      in_pay: { label: "In Pay", color: "bg-green-50 text-green-700" },
-      not_received: { label: "Not Received", color: "bg-gray-50 text-gray-700" },
-      title_issue: { label: "Title Issue", color: "bg-red-50 text-red-700" },
-      contact_operator: { label: "Contact Operator", color: "bg-yellow-50 text-yellow-700" }
-    };
-    return statusMap[status] || { label: status, color: "bg-gray-50 text-gray-700" };
-  };
-
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-  };
-
-  const handleNoteEdit = (orderId: string, currentNote: string) => {
-    setEditingNote(orderId);
-    setNoteText(currentNote);
-  };
-
-  const handleNoteSave = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, notes: noteText } : order
-      )
-    );
-    setEditingNote(null);
-  };
-
-  const handleExportToExcel = () => {
-    const exportData = getFilteredOrders().map(order => ({
-      'ID': order.id,
-      'Owner #': order.ownerNumber,
-      'Operator': order.operator,
-      'Entity': order.entity,
-      'Well/Property': order.wellName,
-      'Property Description': order.propertyDescription,
-      'Royalty Interest': order.royaltyInterest,
-      'Effective Date': order.effectiveDate,
-      'State': order.state,
-      'County': order.county,
-      'Status': getStatusDisplay(order.status).label,
-      'Notes': order.notes
+  const handleNotesChange = (index: number, value: string) => {
+    setEditingNotes(prev => ({
+      ...prev,
+      [index]: value
     }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Division Orders');
-    XLSX.writeFile(wb, `division_orders_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const OrdersTable = ({ orders }: { orders: DivisionOrder[] }) => (
-    <div className="rounded-md border">
-      <div className="p-4">
-        <div className="grid grid-cols-10 gap-4 font-medium text-sm">
-          <div>Status</div>
-          <div>Owner #</div>
-          <div>Operator</div>
-          <div>Entity</div>
-          <div>Well/Property</div>
-          <div>Property Description</div>
-          <div>Royalty Interest</div>
-          <div>Effective Date</div>
-          <div>County</div>
-          <div>Notes</div>
-        </div>
-      </div>
-      <div className="divide-y">
-        {orders.map((order) => (
-          <div key={order.id} className="grid grid-cols-10 gap-4 p-4 hover:bg-muted/50">
-            <div className="flex gap-2">
-              <select
-                value={order.status}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStatusChange(order.id, e.target.value)}
-                className={`text-xs border rounded px-1.5 py-0.5 ${getStatusDisplay(order.status).color} min-w-[100px] focus:outline-none focus:ring-1 focus:ring-blue-500`}
-              >
-                <option value="in_process">In Process</option>
-                <option value="in_pay">In Pay</option>
-                <option value="not_received">Not Received</option>
-                <option value="title_issue">Title Issue</option>
-                <option value="contact_operator">Contact Operator</option>
-              </select>
+  const handleNotesBlur = async (index: number) => {
+    try {
+      const response = await fetch('/api/dashboard/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          index,
+          notes: editingNotes[index] || ''
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update notes');
+      }
+
+      // Clear the editing state for this index
+      setEditingNotes(prev => {
+        const newState = { ...prev };
+        delete newState[index];
+        return newState;
+      });
+
+      // Refresh the records
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error updating notes:', error);
+    }
+  };
+
+  // Filter records based on search term
+  const filteredRecords = records.filter(record => {
+    if (!searchTerm) return true;
+    
+    // Split search term into words
+    const searchWords = searchTerm.toLowerCase().split(/\s+/);
+    
+    // Check if all search words are found in any of the relevant fields
+    return searchWords.every(word => {
+      const searchableFields = [
+        record.propertyName?.toLowerCase() || '',
+        record.operator?.toLowerCase() || '',
+        record.entity?.toLowerCase() || '',
+        record.state?.toLowerCase() || '',
+        record.county?.toLowerCase() || '',
+        record.propertyDescription?.toLowerCase() || '',
+        record.decimalInterest?.toLowerCase() || '',
+        record.effectiveDate?.toLowerCase() || '',
+        record.notes?.toLowerCase() || ''
+      ];
+      
+      return searchableFields.some(field => field.includes(word));
+    });
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-[100vw] mx-auto px-6 py-8">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Division Orders Dashboard</h1>
+              <p className="text-gray-600">Manage and track your division orders in one place</p>
             </div>
-            <div className="text-sm font-medium">{order.ownerNumber}</div>
-            <div>{order.operator}</div>
-            <div>{order.entity}</div>
-            <div>{order.wellName}</div>
-            <div>{order.propertyDescription}</div>
-            <div>{order.royaltyInterest}</div>
-            <div>{order.effectiveDate}</div>
-            <div>{order.county}</div>
+            <div className="flex gap-4">
             <div className="relative">
-              {editingNote === order.id ? (
-                <div className="absolute inset-0 z-10 bg-background">
-                  <div className="flex flex-col gap-2 h-full">
-                    <Textarea
-                      value={noteText}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNoteText(e.target.value)}
-                      className="flex-1 text-sm resize-none"
-                      placeholder="Add a note..."
-                      autoFocus
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingNote(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleNoteSave(order.id)}
-                      >
-                        Save
-                      </Button>
+                <input
+                  type="text"
+                  placeholder="Search records..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80 px-4 py-2.5 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+                <svg
+                  className="absolute left-3 top-3 h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">{order.notes}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6"
-                    onClick={() => handleNoteEdit(order.id, order.notes)}
-                  >
-                    <PencilIcon className="h-3 w-3" />
-                  </Button>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center">
+              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Status</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Property Name</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Operator</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Entity</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">State</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">County</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Property Description</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Decimal Interest</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Effective Date</th>
+                    <th scope="col" className="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredRecords.map((record, index) => (
+                    <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          record.status === 'Completed' 
+                            ? 'bg-green-100 text-green-800'
+                            : record.status === 'In Progress'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {record.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.propertyName || 'N/A'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.operator}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.entity}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <span className="font-medium">{getStateAbbreviation(record.state)}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.county}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.propertyDescription}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.decimalInterest}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{record.effectiveDate}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {editingNotes[index] !== undefined ? (
+                          <input
+                            type="text"
+                            value={editingNotes[index]}
+                            onChange={(e) => handleNotesChange(index, e.target.value)}
+                            onBlur={() => handleNotesBlur(index)}
+                            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                            autoFocus
+                          />
+                        ) : (
+                          <div
+                            onClick={() => setEditingNotes(prev => ({ ...prev, [index]: record.notes || '' }))}
+                            className="cursor-pointer hover:bg-gray-100 px-3 py-1.5 rounded-md transition-colors duration-150"
+                          >
+                            {record.notes || ''}
                 </div>
               )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        ))}
-        {orders.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No division orders found matching your criteria
           </div>
-        )}
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="container mx-auto py-6 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Division Orders Dashboard</h1>
-        <Button onClick={handleExportToExcel}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Export to Excel
-        </Button>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by owner #, operator, entity, well name, or notes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <select
-            value={selectedState}
-            onChange={(e) => setSelectedState(e.target.value)}
-            className="border rounded-md px-3 py-2"
-          >
-            <option value="all">All States</option>
-            {stateData.map((state) => (
-              <option key={state.code} value={state.code}>
-                {state.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border rounded-md px-3 py-2"
-          >
-            <option value="all">All Statuses</option>
-            <option value="in_process">In Process</option>
-            <option value="in_pay">In Pay</option>
-            <option value="not_received">Not Received</option>
-            <option value="title_issue">Title Issue</option>
-            <option value="contact_operator">Contact Operator</option>
-          </select>
-          <Button variant="outline" onClick={clearFilters}>
-            Clear Filters
-          </Button>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Division Orders</CardTitle>
-            <CardDescription>
-              {getFilteredOrders().length} orders found
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <OrdersTable orders={getFilteredOrders()} />
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

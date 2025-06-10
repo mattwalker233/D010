@@ -14,7 +14,7 @@ export function InstantExtractor() {
   const handleError = (err: string) => {
     setError(err)
     setExtractedData(null)
-  }
+}
 
   // This is a placeholder component - it should be used with proper props
   // For now, we'll return null to fix the build error

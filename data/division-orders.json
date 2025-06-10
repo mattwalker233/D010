@@ -1,0 +1,66 @@
+{
+  "orders": [
+    {
+      "fileName": "BML- Ida M Wheat 1, 2.pdf",
+      "uploadDate": "2025-06-04T20:15:06.598Z",
+      "operator": "RODAN, INC.",
+      "entity": "DEX ROYALTY, LLC",
+      "effectiveDate": "2024-04-01",
+      "county": "Loving County",
+      "wells": [
+        {
+          "wellName": "WHEAT, IDA M. #1",
+          "propertyDescription": "SECTION 89, BLOCK 1, W & NW RAILROAD COMPANY SURVEY, LOVING COUNTY, TEXAS",
+          "decimalInterest": 0.00018457
+        },
+        {
+          "wellName": "WHEAT, IDA M. #2",
+          "propertyDescription": "SECTION 89, BLOCK 1, W & NW RAILROAD COMPANY SURVEY, ABSTRACT 200, LOVING COUNTY, TEXAS",
+          "decimalInterest": 0.00018457
+        }
+      ],
+      "preparedDate": "2025-06-04T20:15:06.598Z",
+      "confidence": 0,
+      "id": "order-1749068106600-ul2ec6p33m",
+      "notes": ""
+    },
+    {
+      "fileName": "BML- Louise Wheat Unit 1, 2.pdf",
+      "uploadDate": "2025-06-04T20:17:24.826Z",
+      "operator": "RODAN, INC.",
+      "entity": "DEX ROYALTY, LLC",
+      "effectiveDate": "2024-04-01",
+      "county": "LOVING COUNTY",
+      "wells": [
+        {
+          "wellName": "LOUISE WHEAT UNIT",
+          "propertyDescription": "SECTION 85, BLOCK 1, W&NW RAILROAD COMPANY SURVEY, ABSTRACT 197, LOVING COUNTY, TEXAS",
+          "decimalInterest": 0.00011719
+        }
+      ],
+      "preparedDate": "2025-06-04T20:17:24.826Z",
+      "confidence": 0,
+      "id": "order-1749068244827-n19c0uifvjr",
+      "notes": ""
+    },
+    {
+      "fileName": "Ascent- Donna NW LND GR 1H, 3H.pdf",
+      "uploadDate": "2025-06-04T20:18:27.902Z",
+      "operator": "ASCENT RESOURCES - UTICA, LLC",
+      "entity": "DEX ROYALTY, LLC",
+      "effectiveDate": "2024-05-01",
+      "county": "Guernsey",
+      "wells": [
+        {
+          "wellName": "LONDONDERRY",
+          "propertyDescription": "District Township: LONDONDERRY",
+          "decimalInterest": 0.0000613081
+        }
+      ],
+      "preparedDate": "2025-06-04T20:18:27.902Z",
+      "confidence": 0,
+      "id": "order-1749068307903-e60uzzglc9",
+      "notes": ""
+    }
+  ]
+}

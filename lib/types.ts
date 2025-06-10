@@ -1,22 +1,18 @@
 import type React from "react"
 
 // Division Order Types
+export type OrderStatus = 'in_process' | 'in_pay' | 'not_received' | 'title_issue' | 'contact_operator';
+
 export interface DivisionOrder {
-  id?: string
-  fileName?: string
-  uploadDate?: string
-  // Common properties shared across wells
+  id: string
+  status: OrderStatus
   operator: string
   entity: string
-  effectiveDate: string
   county: string
-  state?: string
-  status?: 'in_process' | 'in_pay' | 'not_received' | 'title_issue' | 'contact_operator'
-  // Array of wells that share the common properties
-  wells: Well[]
+  state: string
+  effectiveDate: string
   notes?: string
-  preparedDate?: string
-  confidence?: number
+  wells: Well[]
 }
 
 export interface ExtractedData {
@@ -204,11 +200,19 @@ export interface Company {
   wells: Well[]
 }
 
+export interface TractAllocation {
+  tractId: string
+  percentage: number
+  description: string
+}
+
 export interface Well {
+  id: string
+  orderId: string
   wellName: string
   propertyDescription: string
-  decimalInterest?: number
-  tractAcres?: number
+  decimalInterest: number | null
+  notes?: string
 }
 
 export interface CompanyDisplayProps {
@@ -276,4 +280,13 @@ export interface AutoExtractionProps {
   companyName: string
   onExtracted: (data: ExtractedData) => void
   onError: (error: string) => void
+}
+
+export interface DivisionOrderInput {
+  operator: string
+  entity: string
+  county: string
+  state: string
+  effectiveDate: string
+  wells: Omit<Well, 'id' | 'orderId'>[]
 }

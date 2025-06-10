@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS entities (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  tax_id TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+); 

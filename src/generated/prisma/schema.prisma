@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model DivisionOrder {
+  id            String   @id @default(cuid())
+  operator      String
+  entity        String
+  effectiveDate DateTime
+  county        String
+  state         String
+  status        String   @default("in_process")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  wells         Well[]
+}
+
+model Well {
+  id                  String        @id @default(cuid())
+  propertyName        String
+  propertyDescription String
+  decimalInterest     Float?
+  interestType        String        @default("RI")
+  divisionOrder       DivisionOrder @relation(fields: [divisionOrderId], references: [id], onDelete: Cascade)
+  divisionOrderId     String
+}

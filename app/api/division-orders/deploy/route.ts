@@ -1,31 +1,84 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { db } from "@/lib/database"
+import { NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
+import { getDb } from '@/lib/db';
+import { DivisionOrderInput } from '@/lib/types';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const divisionOrder = await request.json()
-
-    // TODO: Add validation here
+    const data = await request.json() as DivisionOrderInput;
     
-    // Save to database
-    const savedOrder = await db.createDivisionOrder(divisionOrder)
+    // Basic validation
+    if (!data.operator || !data.entity || !data.county || !data.state || !data.effectiveDate || !Array.isArray(data.wells) || data.wells.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
-    // TODO: Add any additional processing needed for deployment
-    // For example:
-    // - Generate PDF documents
-    // - Send notifications
-    // - Update related records
+    const db = await getDb();
+
+    // Start a transaction
+    await db.run('BEGIN TRANSACTION');
+
+    try {
+      // Create the division order
+      const orderId = uuidv4();
+      await db.run(
+        `INSERT INTO division_orders (id, status, operator, entity, county, state, effective_date)
+         VALUES (?, 'in_process', ?, ?, ?, ?, ?)`,
+        [
+          orderId,
+          data.operator,
+          data.entity,
+          data.county,
+          data.state,
+          data.effectiveDate
+        ]
+      );
+
+      // Create the wells
+      for (const well of data.wells) {
+        await db.run(
+          `INSERT INTO wells (id, division_order_id, well_name, property_description, decimal_interest)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            uuidv4(),
+            orderId,
+            well.wellName,
+            well.propertyDescription,
+            well.decimalInterest
+          ]
+      );
+    }
+
+      // Commit the transaction
+      await db.run('COMMIT');
+
+      // Verify the order was created
+      const createdOrder = await db.get('SELECT * FROM division_orders WHERE id = ?', [orderId]);
+      if (!createdOrder) {
+        throw new Error('Failed to create division order');
+      }
 
     return NextResponse.json({
       success: true,
-      data: savedOrder,
-      message: "Division order deployed successfully"
-    })
+        message: "Division order created successfully",
+        orderId 
+    });
+    } catch (error) {
+      // Rollback on error
+      await db.run('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
-    console.error("Error deploying division order:", error)
+    console.error('Error deploying division order:', error);
     return NextResponse.json(
-      { error: "Failed to deploy division order" },
+      { 
+        success: false, 
+        error: 'Failed to deploy division order',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
-    )
+    );
   }
 } 
