@@ -2,7 +2,7 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { OrderStatus } from './types';
 
-let db: any = null;
+export let db: any = null;
 
 export async function initDb() {
   try {

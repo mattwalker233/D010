@@ -46,7 +46,7 @@ export function DivisionOrderUploader({ onUploadComplete, onError }: DivisionOrd
 
       setUploadProgress(20);
       console.log('Making request to /api/upload...');
-      const response = await fetch('/api/upload', {
+      const response = await fetch('http://localhost:8000/api/upload', {
         method: 'POST',
         body: formData,
       });
@@ -64,16 +64,16 @@ export function DivisionOrderUploader({ onUploadComplete, onError }: DivisionOrd
       setUploadProgress(70);
       console.log('API Response:', responseData);
 
-      if (!responseData.success || !responseData.extractedData) {
+      if (!responseData.success || !responseData.data) {
         throw new Error('No data extracted from PDF');
       }
 
       // Debug logging
-      console.log('Raw extracted data:', responseData.extractedData);
+      console.log('Raw extracted data:', responseData.data);
 
       // The data is already in the correct format from claude-client.ts
       const previewOrder: DivisionOrder = {
-        ...responseData.extractedData,
+        ...responseData.data,
         id: `preview-${Date.now()}`
       };
 

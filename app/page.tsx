@@ -3,133 +3,196 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Link from 'next/link';
-import { FiUpload, FiFile, FiCheck, FiX, FiEdit2, FiSave, FiDatabase } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { FiUpload, FiFile, FiCheck, FiX, FiEdit2, FiSave, FiDatabase, FiPlay } from 'react-icons/fi';
 
 interface Well {
   propertyName: string;
   propertyDescription: string;
   decimalInterest: string;
+  county: string;
 }
 
 interface DivisionOrder {
+  id?: string;
   operator: string;
   entity: string;
   state: string;
-  county: string;
   effectiveDate: string;
   wells: Well[];
 }
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null);
+  const router = useRouter();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<DivisionOrder | null>(null);
+  const [results, setResults] = useState<DivisionOrder[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedResult, setEditedResult] = useState<DivisionOrder | null>(null);
+  const [editedResults, setEditedResults] = useState<DivisionOrder[]>([]);
   const [deploySuccess, setDeploySuccess] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
+      // Add new files to selected files, avoiding duplicates
+      const newFiles = acceptedFiles.filter(newFile => 
+        !selectedFiles.some(existingFile => 
+          existingFile.name === newFile.name && existingFile.size === newFile.size
+        )
+      );
+      
+      setSelectedFiles(prev => [...prev, ...newFiles]);
       setError(null);
     }
-  }, []);
+  }, [selectedFiles]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf']
     },
-    multiple: false
+    multiple: true
   });
 
-  const handleSubmit = async () => {
-    if (!file) return;
+  const handleProcessFiles = async () => {
+    if (selectedFiles.length === 0) return;
 
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const results: DivisionOrder[] = [];
 
-    try {
-      const response = await fetch('http://localhost:8000/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+    // Process files sequentially using the original successful method
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      
+      try {
+        console.log(`Processing file ${i + 1}/${selectedFiles.length}: ${file.name}`);
+        
+        const formData = new FormData();
+        formData.append('file', file);
 
-      if (!response.ok) {
-        throw new Error('Failed to process PDF');
+        const response = await fetch('http://localhost:8000/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to process ${file.name}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success || !data.data) {
+          throw new Error(`No data extracted from ${file.name}`);
+        }
+
+        // Create the order object
+        const order: DivisionOrder = {
+          ...data.data,
+          id: `result-${Date.now()}-${i}`
+        };
+
+        results.push(order);
+        console.log(`Successfully processed ${file.name}`);
+
+      } catch (err) {
+        console.error(`Error processing ${file.name}:`, err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to process file';
+        setError(`Error processing ${file.name}: ${errorMessage}`);
+        // Continue processing other files even if one fails
       }
-
-      const data = await response.json();
-      const parsedResult = JSON.parse(data.result);
-      setResult(parsedResult);
-      setEditedResult(parsedResult);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
     }
+
+    if (results.length > 0) {
+      setResults(results);
+      setEditedResults(results.map((result: DivisionOrder) => ({
+        ...result,
+        wells: result.wells.map((well: Well) => ({ ...well }))
+      })));
+    }
+    
+    setIsLoading(false);
   };
 
   const handleEdit = () => {
+    if (results.length > 0) {
+      setEditedResults(results.map((result: DivisionOrder) => ({
+        ...result,
+        wells: result.wells.map((well: Well) => ({ ...well }))
+      })));
+    }
     setIsEditing(true);
   };
 
   const handleSave = async () => {
-    // Here we'll add the API call to save the edited data
+    if (editedResults.length > 0) {
+      setResults(editedResults);
+    }
     setIsEditing(false);
-    setResult(editedResult);
-    // TODO: Add API call to save to dashboard
   };
 
-  const handleFieldChange = (section: 'divisionOrder' | 'wells', field: string, value: string, wellIndex?: number) => {
-    if (!editedResult) return;
+  const handleCancel = () => {
+    if (results.length > 0) {
+      setEditedResults(results.map((result: DivisionOrder) => ({
+        ...result,
+        wells: result.wells.map((well: Well) => ({ ...well }))
+      })));
+    }
+    setIsEditing(false);
+  };
 
+  const handleFieldChange = (resultIndex: number, section: 'divisionOrder' | 'wells', field: string, value: string, wellIndex?: number) => {
+    if (!editedResults[resultIndex]) return;
+
+    const updatedResults = [...editedResults];
+    
     if (section === 'divisionOrder') {
-      setEditedResult({
-        ...editedResult,
+      updatedResults[resultIndex] = {
+        ...updatedResults[resultIndex],
         [field]: value
-      });
+      };
     } else if (section === 'wells' && wellIndex !== undefined) {
-      const updatedWells = [...editedResult.wells];
+      const updatedWells = [...updatedResults[resultIndex].wells];
       updatedWells[wellIndex] = {
         ...updatedWells[wellIndex],
         [field]: value
       };
-      setEditedResult({
-        ...editedResult,
+      updatedResults[resultIndex] = {
+        ...updatedResults[resultIndex],
         wells: updatedWells
-      });
+      };
     }
+    
+    setEditedResults(updatedResults);
   };
 
   const handleDeploy = async () => {
-    if (!editedResult) return;
+    if (editedResults.length === 0) return;
     
     setIsDeploying(true);
     setError(null);
     setDeploySuccess(false);
 
     try {
-      console.log('Starting deployment with data:', editedResult);
+      console.log('Starting deployment with data:', editedResults);
       
-      // Flatten the wells data for dashboard format
-      const dashboardData = editedResult.wells.map(well => ({
-        propertyName: well.propertyName || '',
-        operator: editedResult.operator || '',
-        entity: editedResult.entity || '',
-        propertyDescription: well.propertyDescription || '',
-        decimalInterest: well.decimalInterest || '',
-        county: editedResult.county || '',
-        state: editedResult.state || '',
-        effectiveDate: editedResult.effectiveDate || '',
-        status: '',  // Empty for now
-        notes: ''    // Empty for now
-      }));
+      // Flatten all wells from all results for dashboard format
+      const dashboardData = editedResults.flatMap(result => 
+        result.wells.map(well => ({
+          propertyName: well.propertyName || '',
+          operator: result.operator || '',
+          entity: result.entity || '',
+          propertyDescription: well.propertyDescription || '',
+          decimalInterest: well.decimalInterest || '',
+          county: well.county || '',
+          state: result.state || '',
+          effectiveDate: result.effectiveDate || '',
+          status: '',
+          notes: ''
+        }))
+      );
 
       console.log('Prepared dashboard data:', dashboardData);
 
@@ -159,6 +222,10 @@ export default function Home() {
 
         setDeploySuccess(true);
         setError(null);
+        
+        // Redirect immediately to dashboard
+        router.push('/dashboard');
+        
       } catch (fetchError: unknown) {
         console.error('Fetch error details:', {
           name: fetchError instanceof Error ? fetchError.name : 'Unknown',
@@ -180,20 +247,34 @@ export default function Home() {
     }
   };
 
+  const handleClear = () => {
+    setSelectedFiles([]);
+    setResults([]);
+    setEditedResults([]);
+    setError(null);
+    setDeploySuccess(false);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">
             Division Order Processor
           </h1>
-          <Link
-            href="/dashboard"
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            <FiDatabase className="mr-2" />
-            View Dashboard
-          </Link>
+          <div className="flex gap-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              <FiDatabase className="mr-2" />
+              View Dashboard
+            </Link>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -206,44 +287,64 @@ export default function Home() {
             <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
             <p className="mt-2 text-sm text-gray-600">
               {isDragActive
-                ? "Drop the PDF here"
-                : "Drag and drop a PDF file here, or click to select"}
+                ? "Drop PDF files here"
+                : "Drag and drop PDF files here, or click to select"}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Supports single or multiple files
             </p>
           </div>
 
-          {file && (
-            <div className="mt-4 flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-              <div className="flex items-center">
-                <FiFile className="h-5 w-5 text-gray-400 mr-2" />
-                <span className="text-sm text-gray-600">{file.name}</span>
+          {selectedFiles.length > 0 && (
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Selected Files ({selectedFiles.length})</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleProcessFiles}
+                    disabled={isLoading || selectedFiles.length === 0}
+                    className={`flex items-center px-4 py-2 rounded-lg text-white font-medium
+                      ${!selectedFiles.length || isLoading
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                  >
+                    <FiPlay className="mr-2" />
+                    {isLoading ? 'Processing...' : 'Process All Files'}
+                  </button>
+                  <button
+                    onClick={handleClear}
+                    disabled={isLoading}
+                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  >
+                    <FiX className="mr-2" />
+                    Clear All
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setFile(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <FiX className="h-5 w-5" />
-              </button>
+
+              <div className="space-y-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center">
+                      <FiFile className="h-5 w-5 text-gray-400 mr-2" />
+                      <span className="text-sm text-gray-600">{file.name}</span>
+                      <span className="text-xs text-gray-400 ml-2">
+                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => removeFile(index)}
+                      disabled={isLoading}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <FiX className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={!file || isLoading}
-            className={`mt-4 w-full py-2 px-4 rounded-lg text-white font-medium
-              ${!file || isLoading
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Processing...
-              </div>
-            ) : (
-              'Process PDF'
-            )}
-          </button>
         </div>
 
         {error && (
@@ -253,185 +354,191 @@ export default function Home() {
           </div>
         )}
 
-        {result && (
+        {results.length > 0 && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800">Division Order Details</h2>
-              <div className="flex items-center space-x-4">
-                {!isEditing ? (
-                  <button
-                    onClick={handleEdit}
-                    className="flex items-center text-blue-600 hover:text-blue-700"
-                  >
-                    <FiEdit2 className="h-4 w-4 mr-1" />
-                    Edit
-                  </button>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Processed Orders ({results.length})
+              </h2>
+              <div className="flex gap-4">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      <FiSave className="mr-2" />
+                      Save
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                      <FiX className="mr-2" />
+                      Cancel
+                    </button>
+                  </>
                 ) : (
-                  <button
-                    onClick={handleSave}
-                    className="flex items-center text-green-600 hover:text-green-700"
-                  >
-                    <FiSave className="h-4 w-4 mr-1" />
-                    Save
-                  </button>
+                  <>
+                    <button
+                      onClick={handleEdit}
+                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <FiEdit2 className="mr-2" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={handleDeploy}
+                      disabled={isEditing || isDeploying}
+                      className={`flex items-center px-4 py-2 rounded-lg ${
+                        isEditing || isDeploying
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                    >
+                      <FiDatabase className="mr-2" />
+                      {isDeploying ? 'Deploying...' : 'Deploy to Dashboard'}
+                    </button>
+                  </>
                 )}
-                <button
-                  onClick={handleDeploy}
-                  disabled={isDeploying || isEditing}
-                  className={`flex items-center px-4 py-2 rounded-lg text-white font-medium
-                    ${isDeploying || isEditing
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-indigo-600 hover:bg-indigo-700'
-                    }`}
-                >
-                  {isDeploying ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Deploying...
-                    </>
-                  ) : (
-                    <>
-                      <FiUpload className="h-4 w-4 mr-1" />
-                      Deploy to Dashboard
-                    </>
-                  )}
-                </button>
               </div>
             </div>
 
-            {deploySuccess && (
-              <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
-                <FiCheck className="h-5 w-5 mr-2" />
-                Successfully deployed to dashboard!
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Operator</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResult?.operator || ''}
-                      onChange={(e) => handleFieldChange('divisionOrder', 'operator', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <p className="mt-1 text-gray-900">{result.operator || 'Not specified'}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Entity</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResult?.entity || ''}
-                      onChange={(e) => handleFieldChange('divisionOrder', 'entity', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <p className="mt-1 text-gray-900">{result.entity || 'Not specified'}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-500">State</label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedResult?.state || ''}
-                          onChange={(e) => handleFieldChange('divisionOrder', 'state', e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <p className="mt-1 text-gray-900">{result.state || 'Not specified'}</p>
-                      )}
+            <div className="space-y-8">
+              {(isEditing ? editedResults : results).map((result, resultIndex) => (
+                <div key={result.id || resultIndex} className="border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                    Order {resultIndex + 1}: {result.operator} - {result.entity}
+                  </h3>
+                  
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-md font-semibold text-gray-700 mb-2">Division Order Details</h4>
+                        <div className="space-y-2">
+                          {isEditing ? (
+                            <>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700">Operator</label>
+                                <input
+                                  type="text"
+                                  value={editedResults[resultIndex]?.operator || ''}
+                                  onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'operator', e.target.value)}
+                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700">Entity</label>
+                                <input
+                                  type="text"
+                                  value={editedResults[resultIndex]?.entity || ''}
+                                  onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'entity', e.target.value)}
+                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700">State</label>
+                                <input
+                                  type="text"
+                                  value={editedResults[resultIndex]?.state || ''}
+                                  onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'state', e.target.value)}
+                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700">Effective Date</label>
+                                <input
+                                  type="text"
+                                  value={editedResults[resultIndex]?.effectiveDate || ''}
+                                  onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'effectiveDate', e.target.value)}
+                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <p><span className="font-medium">Operator:</span> {result.operator}</p>
+                              <p><span className="font-medium">Entity:</span> {result.entity}</p>
+                              <p><span className="font-medium">State:</span> {result.state}</p>
+                              <p><span className="font-medium">Effective Date:</span> {result.effectiveDate}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
+
                     <div>
-                      <label className="block text-xs text-gray-500">County</label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedResult?.county || ''}
-                          onChange={(e) => handleFieldChange('divisionOrder', 'county', e.target.value)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <p className="mt-1 text-gray-900">{result.county || 'Not specified'}</p>
-                      )}
+                      <h4 className="text-md font-semibold text-gray-700 mb-4">Wells ({result.wells.length})</h4>
+                      <div className="space-y-4">
+                        {(isEditing ? editedResults[resultIndex]?.wells : result.wells)?.map((well, wellIndex) => (
+                          <div key={wellIndex} className="border rounded-lg p-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                {isEditing ? (
+                                  <>
+                                    <div className="mb-2">
+                                      <label className="block text-sm font-medium text-gray-700">Property Name</label>
+                                      <input
+                                        type="text"
+                                        value={editedResults[resultIndex]?.wells[wellIndex]?.propertyName || ''}
+                                        onChange={(e) => handleFieldChange(resultIndex, 'wells', 'propertyName', e.target.value, wellIndex)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700">Property Description</label>
+                                      <input
+                                        type="text"
+                                        value={editedResults[resultIndex]?.wells[wellIndex]?.propertyDescription || ''}
+                                        onChange={(e) => handleFieldChange(resultIndex, 'wells', 'propertyDescription', e.target.value, wellIndex)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p><span className="font-medium">Property Name:</span> {well.propertyName}</p>
+                                    <p><span className="font-medium">Property Description:</span> {well.propertyDescription}</p>
+                                  </>
+                                )}
+                              </div>
+                              <div>
+                                {isEditing ? (
+                                  <>
+                                    <div className="mb-2">
+                                      <label className="block text-sm font-medium text-gray-700">Decimal Interest</label>
+                                      <input
+                                        type="text"
+                                        value={editedResults[resultIndex]?.wells[wellIndex]?.decimalInterest || ''}
+                                        onChange={(e) => handleFieldChange(resultIndex, 'wells', 'decimalInterest', e.target.value, wellIndex)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700">County</label>
+                                      <input
+                                        type="text"
+                                        value={editedResults[resultIndex]?.wells[wellIndex]?.county || ''}
+                                        onChange={(e) => handleFieldChange(resultIndex, 'wells', 'county', e.target.value, wellIndex)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p><span className="font-medium">Decimal Interest:</span> {well.decimalInterest}</p>
+                                    <p><span className="font-medium">County:</span> {well.county}</p>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Effective Date</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editedResult?.effectiveDate || ''}
-                      onChange={(e) => handleFieldChange('divisionOrder', 'effectiveDate', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <p className="mt-1 text-gray-900">{result.effectiveDate || 'Not specified'}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Wells Information</h3>
-              <div className="space-y-4">
-                {result.wells.map((well, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Property Name</label>
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={editedResult?.wells[index]?.propertyName || ''}
-                            onChange={(e) => handleFieldChange('wells', 'propertyName', e.target.value, index)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        ) : (
-                          <p className="mt-1 text-gray-900">{well.propertyName || 'Not specified'}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Property Description</label>
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={editedResult?.wells[index]?.propertyDescription || ''}
-                            onChange={(e) => handleFieldChange('wells', 'propertyDescription', e.target.value, index)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        ) : (
-                          <p className="mt-1 text-gray-900">{well.propertyDescription || 'Not specified'}</p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Decimal Interest</label>
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={editedResult?.wells[index]?.decimalInterest || ''}
-                            onChange={(e) => handleFieldChange('wells', 'decimalInterest', e.target.value, index)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                          />
-                        ) : (
-                          <p className="mt-1 text-gray-900">{well.decimalInterest || 'Not specified'}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         )}

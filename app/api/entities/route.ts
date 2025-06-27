@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { entities } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/entities - Get all entities
 export async function GET() {
   try {
-    const allEntities = await db.select().from(entities);
-    return NextResponse.json(allEntities);
+    const entities = await prisma.entity.findMany({
+      orderBy: {
+        entity_name: 'asc'
+      }
+    });
+    return NextResponse.json(entities);
   } catch (error) {
     console.error('Error fetching entities:', error);
     return NextResponse.json(
@@ -21,24 +23,38 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, taxId, phone, email, address } = body;
+    const { entity_name, sticker_info, signature } = body;
 
-    if (!name || !taxId) {
+    if (!entity_name) {
       return NextResponse.json(
-        { error: 'Name and Tax ID are required' },
+        { error: 'Entity name is required' },
         { status: 400 }
       );
     }
 
-    const newEntity = await db.insert(entities).values({
-      name,
-      taxId,
-      phone,
-      email,
-      address,
-    }).returning();
+    if (!sticker_info) {
+      return NextResponse.json(
+        { error: 'Sticker info is required' },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json(newEntity[0]);
+    if (!signature) {
+      return NextResponse.json(
+        { error: 'Signature is required' },
+        { status: 400 }
+      );
+    }
+
+    const entity = await prisma.entity.create({
+      data: {
+        entity_name,
+        sticker_info,
+        signature,
+      },
+    });
+
+    return NextResponse.json(entity);
   } catch (error) {
     console.error('Error creating entity:', error);
     return NextResponse.json(
@@ -61,7 +77,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await db.delete(entities).where(eq(entities.id, parseInt(id)));
+    await prisma.entity.delete({
+      where: {
+        id: id
+      }
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting entity:', error);

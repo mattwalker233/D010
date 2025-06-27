@@ -1,11 +1,28 @@
 'use client';
 
-import { useState, useRef, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useRef } from 'react';
 import { Combobox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
-import SignaturePad from 'react-signature-canvas';
-import { Entity } from '@/lib/db/schema';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+// Set up PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+
+interface Entity {
+  id: string;
+  entity_name: string;
+  signature: string;
+  sticker_info: string;
+}
+
+interface SignaturePosition {
+  x: number;
+  y: number;
+  page: number;
+}
 
 export default function SignPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -15,7 +32,14 @@ export default function SignPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const signaturePadRef = useRef<SignaturePad>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [signaturePositions, setSignaturePositions] = useState<SignaturePosition[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   // Fetch entities
   useEffect(() => {
@@ -37,9 +61,76 @@ export default function SignPage() {
   const filteredEntities = query === ''
     ? entities
     : entities.filter((entity) => {
-        const searchString = `${entity.name} ${entity.taxId} ${entity.email}`.toLowerCase();
+        const searchString = entity.entity_name.toLowerCase();
         return searchString.includes(query.toLowerCase());
       });
+
+  // Handle PDF preview
+  const handleFileSelect = async (selectedFile: File | null) => {
+    setFile(selectedFile);
+    setPdfError(null);
+    if (selectedFile) {
+      setShowPreview(true);
+      setSignaturePositions([]);
+      setCurrentPage(1);
+      // Create a Blob URL for the PDF file
+      const url = URL.createObjectURL(selectedFile);
+      setPdfUrl(url);
+    } else {
+      setPdfUrl(null);
+    }
+  };
+
+  // Handle PDF load
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setTotalPages(numPages);
+  };
+
+  // Handle page click for signature placement
+  const handlePageClick = (e: React.MouseEvent<HTMLDivElement>, pageNumber: number) => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Get the page element to calculate PDF coordinates
+    const pageElement = e.currentTarget;
+    const pageRect = pageElement.getBoundingClientRect();
+    
+    // Calculate relative position within the page
+    const relativeX = (x - (pageRect.left - rect.left)) / pageRect.width;
+    const relativeY = (y - (pageRect.top - rect.top)) / pageRect.height;
+
+    // Convert to PDF coordinates (standard PDF size is 612x792 points)
+    const pdfX = relativeX * 612;
+    const pdfY = (1 - relativeY) * 792; // Flip Y coordinate (PDF origin is bottom-left)
+
+    // Add signature position
+    const newPosition: SignaturePosition = {
+      x: pdfX,
+      y: pdfY,
+      page: pageNumber
+    };
+
+    setSignaturePositions(prev => [...prev, newPosition]);
+  };
+
+  // Clean up Blob URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
+
+  // PDF load error handler
+  const onDocumentLoadError = (error: any) => {
+    setPdfError(error?.message || 'Failed to load PDF file.');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,20 +139,23 @@ export default function SignPage() {
       return;
     }
 
+    if (!selectedEntity.signature) {
+      setError('Selected entity does not have a signature');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const signature = signaturePadRef.current?.toDataURL() || '';
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('entityId', selectedEntity.id.toString());
-      formData.append('signature', signature);
-      formData.append('printedName', selectedEntity.name);
-      formData.append('taxId', selectedEntity.taxId);
-      formData.append('phone', selectedEntity.phone || '');
-      formData.append('email', selectedEntity.email || '');
-      formData.append('address', selectedEntity.address || '');
+      formData.append('entityId', selectedEntity.id);
+      
+      // Add signature positions if any
+      if (signaturePositions.length > 0) {
+        formData.append('signaturePositions', JSON.stringify(signaturePositions));
+      }
 
       const response = await fetch('/api/sign-pdf', {
         method: 'POST',
@@ -88,13 +182,19 @@ export default function SignPage() {
       // Clear form
       setFile(null);
       setSelectedEntity(null);
-      signaturePadRef.current?.clear();
+      setSignaturePositions([]);
+      setShowPreview(false);
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign PDF');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Remove signature position
+  const removeSignature = (index: number) => {
+    setSignaturePositions(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -112,7 +212,7 @@ export default function SignPage() {
               <Combobox.Input
                 className="w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 onChange={(event) => setQuery(event.target.value)}
-                displayValue={(entity: Entity) => entity?.name || ''}
+                displayValue={(entity: Entity) => entity?.entity_name ?? ''}
                 placeholder="Search by entity..."
               />
               <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -144,7 +244,7 @@ export default function SignPage() {
                         {({ selected, active }) => (
                           <>
                             <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                              {entity.name}
+                              {entity.entity_name}
                             </span>
                             {selected ? (
                               <span
@@ -174,7 +274,7 @@ export default function SignPage() {
           <input
             type="file"
             accept=".pdf"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
             className="block w-full text-sm text-gray-500
               file:mr-4 file:py-2 file:px-4
               file:rounded-md file:border-0
@@ -184,49 +284,114 @@ export default function SignPage() {
           />
         </div>
 
-        {/* Signature Pad */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Signature
-          </label>
-          <div className="border rounded-md p-2">
-            <SignaturePad
-              ref={signaturePadRef}
-              canvasProps={{
-                className: 'w-full h-48 border rounded-md',
-              }}
-            />
+        {/* PDF Preview and Signature Placement */}
+        {showPreview && file && (
+          <div className="border rounded-lg p-4">
+            <h3 className="text-lg font-medium mb-4">Click where you want to place signatures</h3>
+            {/* Error message for PDF loading */}
+            {pdfError && (
+              <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{pdfError}</div>
+            )}
+            {/* Signature positions list */}
+            {signaturePositions.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded">
+                <h4 className="font-medium mb-2">Placed Signatures:</h4>
+                <div className="space-y-1">
+                  {signaturePositions.map((pos, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span>Signature {index + 1} - Page {pos.page} at ({Math.round(pos.x)}, {Math.round(pos.y)})</span>
+                      <button
+                        type="button"
+                        onClick={() => removeSignature(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* PDF Viewer */}
+            <div ref={containerRef} className="border border-gray-300 rounded overflow-auto max-h-96">
+              <Document
+                file={pdfUrl}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                className="flex flex-col items-center"
+              >
+                {Array.from(new Array(numPages), (el, index) => (
+                  <div key={`page_${index + 1}`} className="relative mb-4">
+                    <Page
+                      pageNumber={index + 1}
+                      width={600}
+                      className="cursor-crosshair"
+                      onClick={(e) => handlePageClick(e, index + 1)}
+                    />
+                    {/* Display placed signatures on this page */}
+                    {signaturePositions
+                      .filter(pos => pos.page === index + 1)
+                      .map((pos, sigIndex) => {
+                        const globalIndex = signaturePositions.findIndex(p => p === pos);
+                        return (
+                          <div
+                            key={`sig_${globalIndex}`}
+                            className="absolute bg-red-500 text-white text-xs px-1 py-0.5 rounded pointer-events-none"
+                            style={{
+                              left: `${(pos.x / 612) * 100}%`,
+                              top: `${(1 - pos.y / 792) * 100}%`,
+                              transform: 'translate(-50%, -50%)'
+                            }}
+                          >
+                            Sig {globalIndex + 1}
+                          </div>
+                        );
+                      })}
+                  </div>
+                ))}
+              </Document>
+            </div>
+            <div className="mt-4 text-sm text-gray-600">
+              {signaturePositions.length} signature(s) placed
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => signaturePadRef.current?.clear()}
-            className="mt-2 text-sm text-gray-600 hover:text-gray-800"
-          >
-            Clear Signature
-          </button>
-        </div>
+        )}
 
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !file || !selectedEntity}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Signing...' : 'Sign PDF'}
+          {loading ? 'Signing PDF...' : 'Sign PDF'}
         </button>
-
-        {error && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="p-4 bg-green-50 text-green-700 rounded-md">
-            PDF signed successfully!
-          </div>
-        )}
       </form>
+
+      {/* Success Message */}
+      {success && (
+        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex">
+            <CheckCircleIcon className="h-5 w-5 text-green-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">PDF signed successfully!</h3>
+              <p className="text-sm text-green-700 mt-1">The signed PDF has been downloaded.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <div className="flex">
+            <ExclamationCircleIcon className="h-5 w-5 text-red-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

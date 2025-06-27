@@ -1,10 +1,14 @@
 CREATE TABLE IF NOT EXISTS entities (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  tax_id TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entity_name TEXT,
+  printed_name TEXT,
+  tax_id TEXT,
   phone TEXT,
   email TEXT,
   address TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  signature TEXT,
+  witness_name TEXT,
+  witness_signature TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 ); 
