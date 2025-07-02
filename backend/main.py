@@ -15,6 +15,7 @@ import pathlib
 import glob
 from PIL import ImageEnhance
 import re
+from PIL import ImageOps
 
 # Set Tesseract path
 try:
@@ -188,6 +189,11 @@ def extract_text_from_pdf(pdf_content: bytes) -> str:
         total_pages = len(doc)
         print(f"Total pages in PDF: {total_pages}")
         
+        # Use single, optimized OCR configuration for consistent results
+        configs = [
+            '--oem 3 --psm 12',  # Default engine, sparse text with OSD
+        ]
+        
         for page_num, page in enumerate(doc):
             print(f"\nProcessing page {page_num + 1} of {total_pages}")
             try:
@@ -198,47 +204,68 @@ def extract_text_from_pdf(pdf_content: bytes) -> str:
                 
                 # Enhanced image preprocessing
                 img = img.convert('L')  # Convert to grayscale
-                enhancer = ImageEnhance.Contrast(img)
-                img = enhancer.enhance(3.0)  # Increased contrast
-                enhancer = ImageEnhance.Sharpness(img)
-                img = enhancer.enhance(2.0)  # Added sharpness
-                img = img.point(lambda x: 0 if x < 128 else 255, '1')  # Adjusted threshold
                 
-                # Save debug image
-                debug_dir = pathlib.Path(__file__).parent / "debug_images"
-                debug_dir.mkdir(exist_ok=True)
-                debug_path = debug_dir / f"page_{page_num + 1}.png"
-                img.save(debug_path)
-                print(f"Saved debug image to: {debug_path}")
-                
-                # Try different OCR configurations for different content types
+                # Use single, optimized OCR configuration for consistent results
                 configs = [
-                    # Default config for general text
-                    r'--oem 3 --psm 6 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,%()/-: " --dpi 400',
-                    # Config for tables
-                    r'--oem 3 --psm 6 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,%()/-: " --dpi 400 -c tessedit_do_invert=0',
-                    # Config for lists
-                    r'--oem 3 --psm 4 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,%()/-: " --dpi 400',
-                    # Config for single column text
-                    r'--oem 3 --psm 3 -c tessedit_char_whitelist="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,%()/-: " --dpi 400'
+                    '--oem 3 --psm 12',  # Default engine, sparse text with OSD
                 ]
                 
                 best_text = ""
+                best_score = 0
+                
+                # Try the single OCR configuration
                 for config in configs:
                     try:
                         page_text = pytesseract.image_to_string(img, config=config)
-                        if len(page_text.strip()) > len(best_text.strip()):
+                        
+                        # Score the text quality
+                        words = page_text.split()
+                        score = len(words) * 10  # Base score from word count
+                        
+                        # Bonus for longer text
+                        if len(page_text) > 100:
+                            score += 100
+                        if len(page_text) > 500:
+                            score += 200
+                        if len(page_text) > 1000:
+                            score += 300
+                        
+                        # Penalty for garbage patterns
+                        garbage_patterns = [
+                            'qqqqqqqqqq', 'wwwwwwwwww', 'eeeeeeeeee', 'rrrrrrrrrr',
+                            'tttttttttt', 'yyyyyyyyyy', 'uuuuuuuuuu', 'iiiiiiiiii',
+                            'oooooooooo', 'pppppppppp', 'aaaaaaaaaa', 'ssssssssss',
+                            'dddddddddd', 'ffffffffff', 'gggggggggg', 'hhhhhhhhhh',
+                            'jjjjjjjjjj', 'kkkkkkkkkk', 'llllllllll', 'zzzzzzzzzz',
+                            'xxxxxxxxxx', 'cccccccccc', 'vvvvvvvvvv', 'bbbbbbbbbb',
+                            'nnnnnnnnnn', 'mmmmmmmmmm'
+                        ]
+                        
+                        for pattern in garbage_patterns:
+                            if pattern in page_text.lower():
+                                score -= 500
+                        
+                        # Bonus for common legal/division order terms
+                        legal_terms = ['operator', 'entity', 'well', 'interest', 'county', 'state', 'effective', 'date']
+                        for term in legal_terms:
+                            if term.lower() in page_text.lower():
+                                score += 50
+                        
+                        if score > best_score:
                             best_text = page_text
+                            best_score = score
+                            print(f"Page {page_num + 1}, Config: {config} - Score: {score}, Words: {len(words)}")
+                            
                     except Exception as e:
-                        print(f"Error with OCR config: {str(e)}")
+                        print(f"Error with config {config}: {e}")
                         continue
                 
                 if best_text.strip():
-                    print(f"Successfully extracted text from page {page_num + 1}")
+                    print(f"Successfully extracted text from page {page_num + 1} (score: {best_score})")
                     print(f"Text length: {len(best_text)} characters")
                     text += best_text + "\n"
                 else:
-                    print(f"Warning: No text extracted from page {page_num + 1}")
+                    print(f"Warning: No readable text extracted from page {page_num + 1}")
                 
             except Exception as e:
                 print(f"Error processing page {page_num + 1}: {str(e)}")
