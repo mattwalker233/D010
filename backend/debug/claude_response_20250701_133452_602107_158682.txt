@@ -1,0 +1,24 @@
+I'll analyze this division order and extract the information into the requested JSON format. From the image, I can see some details, though parts of it are fragmented. Here's what I can extract:
+
+{
+    "operator": "EOG Resources, Inc.",
+    "entity": "EOG Resources, Inc.",
+    "state": "Texas",
+    "effectiveDate": "Not clearly specified in the document",
+    "wells": [
+        {
+            "propertyName": "UNIT 1H",
+            "propertyDescription": "Section 1, Block A",
+            "decimalInterest": "0.0625",
+            "county": "Reeves"
+        },
+        {
+            "propertyName": "UNIT 2H",
+            "propertyDescription": "Section 1, Block A",
+            "decimalInterest": "0.0625",
+            "county": "Reeves"
+        }
+    ]
+}
+
+Note: The document appears to be a complex form with multiple sections and tables. While I can see some well information, parts of the document are difficult to read clearly in the provided format. I've included the wells I could definitively identify, but there may be more wells in sections that are not clearly visible or legible in the image. If you need more specific or additional information, please provide a clearer version of the document or highlight specific sections you'd like me to focus on.

@@ -1,0 +1,24 @@
+I'll help extract information from this division order, but I notice the image appears to be partially distorted or contains overlapping text which makes some information difficult to read clearly. From what I can discern:
+
+{
+    "operator": "Unable to clearly determine from provided text",
+    "entity": "Unable to clearly determine from provided text",
+    "state": "Unable to clearly determine from provided text",
+    "effectiveDate": "Unable to clearly determine from provided text",
+    "wells": [
+        {
+            "propertyName": "Unable to clearly determine from provided text",
+            "propertyDescription": "Unable to clearly determine from provided text",
+            "decimalInterest": "Unable to clearly determine from provided text",
+            "county": "Unable to clearly determine from provided text"
+        }
+    ]
+}
+
+I apologize, but the image appears to contain overlapping text or formatting issues that make it difficult to reliably extract the requested information. To provide accurate information, I would need:
+
+1. A clearer version of the document
+2. A version where the text is not overlapping
+3. A document where the formatting is preserved and readable
+
+Could you please provide a clearer version of the division order, or perhaps transcribe the relevant sections in text form? This would allow me to provide a more accurate and complete extraction of the information.

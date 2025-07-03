@@ -1,0 +1,29 @@
+Based on the provided division order document, I'll extract the requested information into the specified JSON format:
+
+{
+    "operator": "CONTINENTAL RESOURCES INC",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "OK",
+    "effectiveDate": "06/10/2025",
+    "wells": [
+        {
+            "propertyName": "PAYNE 1-10H",
+            "propertyDescription": "SEC 10-T13N-R13W SPACING UNIT 640",
+            "decimalInterest": "0.00822752",
+            "county": "BLAINE"
+        }
+    ]
+}
+
+This extraction includes:
+- The operator is clearly stated as Continental Resources Inc
+- The entity/owner is Blue Sky Minerals LP
+- The state is OK (Oklahoma)
+- The effective date is explicitly stated as 06/10/2025
+- One well is mentioned in the document:
+  * Property Name: PAYNE 1-10H
+  * Property Description includes the section, township, range, and spacing unit information
+  * Decimal Interest is listed as 0.00822752
+  * County is Blaine (extracted from "BLAINE COUNTY, OK")
+
+The document appears to be a standard division order form with one well listed, repeated twice (likely for copy purposes), with additional informational pages about ownership changes and procedures.

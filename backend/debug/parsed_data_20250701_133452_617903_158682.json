@@ -1,0 +1,20 @@
+{
+  "operator": "EOG Resources, Inc.",
+  "entity": "EOG Resources, Inc.",
+  "state": "Texas",
+  "effectiveDate": "Not clearly specified in the document",
+  "wells": [
+    {
+      "propertyName": "UNIT 1H",
+      "propertyDescription": "Section 1, Block A",
+      "decimalInterest": "0.0625",
+      "county": "Reeves"
+    },
+    {
+      "propertyName": "UNIT 2H",
+      "propertyDescription": "Section 1, Block A",
+      "decimalInterest": "0.0625",
+      "county": "Reeves"
+    }
+  ]
+}

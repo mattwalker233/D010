@@ -40,6 +40,7 @@ export default function SignPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [placeStickerOnEveryPage, setPlaceStickerOnEveryPage] = useState(false);
 
   // Fetch entities
   useEffect(() => {
@@ -156,6 +157,9 @@ export default function SignPage() {
       if (signaturePositions.length > 0) {
         formData.append('signaturePositions', JSON.stringify(signaturePositions));
       }
+      
+      // Add sticker placement option
+      formData.append('placeStickerOnEveryPage', placeStickerOnEveryPage.toString());
 
       const response = await fetch('/api/sign-pdf', {
         method: 'POST',
@@ -282,6 +286,27 @@ export default function SignPage() {
               file:bg-blue-50 file:text-blue-700
               hover:file:bg-blue-100"
           />
+        </div>
+
+        {/* Sticker Placement Option */}
+        <div>
+          <div className="flex items-center">
+            <input
+              id="placeStickerOnEveryPage"
+              type="checkbox"
+              checked={placeStickerOnEveryPage}
+              onChange={(e) => setPlaceStickerOnEveryPage(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="placeStickerOnEveryPage" className="ml-2 block text-sm text-gray-700">
+              Place sticker on every page
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            {placeStickerOnEveryPage 
+              ? "Sticker will be placed on all pages of the document" 
+              : "Sticker will only be placed on the first page"}
+          </p>
         </div>
 
         {/* PDF Preview and Signature Placement */}

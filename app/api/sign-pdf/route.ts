@@ -189,6 +189,8 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File;
     const entityId = formData.get('entityId') as string;
     const signaturePositionsStr = formData.get('signaturePositions') as string;
+    const placeStickerOnEveryPageStr = formData.get('placeStickerOnEveryPage') as string;
+    const placeStickerOnEveryPage = placeStickerOnEveryPageStr === 'true';
 
     if (!file || !entityId) {
       return NextResponse.json(
@@ -272,159 +274,164 @@ export async function POST(request: Request) {
       }
     }
 
-    // Add sticker to bottom right corner of first page (always, regardless of signatures)
+    // Add sticker to pages based on user preference
     if (stickerText && stickerText.trim() !== '') {
-      const firstPage = pages[0];
-      const { width, height } = firstPage.getSize();
+      // Determine which pages to add stickers to
+      const pagesToSticker = placeStickerOnEveryPage ? pages : [pages[0]];
       
-      // Process text to preserve original line breaks
-      const fontSize = 9; // Slightly larger font for better readability
-      const lineHeight = fontSize + 2; // Better line spacing
-      const padding = 12; // Increased padding for better spacing
-      const cornerRadius = 6; // Rounded corners
-      const maxStickerWidth = Math.min(320, width * 0.35); // Slightly smaller max width
-      const textMaxWidth = maxStickerWidth - (padding * 2);
-      
-      // Split text by original line breaks first
-      const originalLines = stickerText.split('\n');
-      const processedLines: string[] = [];
-      
-      // Process each original line
-      for (const originalLine of originalLines) {
-        const words = originalLine.trim().split(' ');
-        let currentLine = '';
+      for (const page of pagesToSticker) {
+        const { width, height } = page.getSize();
         
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          // More accurate width estimation using character count
-          const estimatedWidth = testLine.length * fontSize * 0.6; // More accurate multiplier
+        // Process text to preserve original line breaks
+        const fontSize = 9; // Slightly larger font for better readability
+        const lineHeight = fontSize + 2; // Better line spacing
+        const padding = 12; // Increased padding for better spacing
+        const cornerRadius = 6; // Rounded corners
+        const maxStickerWidth = Math.min(320, width * 0.35); // Slightly smaller max width
+        const textMaxWidth = maxStickerWidth - (padding * 2);
+        
+        // Split text by original line breaks first
+        const originalLines = stickerText.split('\n');
+        const processedLines: string[] = [];
+        
+        // Process each original line
+        for (const originalLine of originalLines) {
+          const words = originalLine.trim().split(' ');
+          let currentLine = '';
           
-          if (estimatedWidth > textMaxWidth && currentLine) {
+          for (const word of words) {
+            const testLine = currentLine ? `${currentLine} ${word}` : word;
+            // More accurate width estimation using character count
+            const estimatedWidth = testLine.length * fontSize * 0.6; // More accurate multiplier
+            
+            if (estimatedWidth > textMaxWidth && currentLine) {
+              processedLines.push(currentLine);
+              currentLine = word;
+            } else {
+              currentLine = testLine;
+            }
+          }
+          
+          if (currentLine) {
             processedLines.push(currentLine);
-            currentLine = word;
-          } else {
-            currentLine = testLine;
           }
         }
         
-        if (currentLine) {
-          processedLines.push(currentLine);
+        // Calculate required height based on content - no line limit
+        const displayLines = processedLines;
+        const totalTextHeight = displayLines.length * lineHeight;
+        const requiredHeight = totalTextHeight + (padding * 2);
+        const stickerHeight = Math.max(50, requiredHeight); // Minimum 50 points
+        
+        // Calculate actual sticker width based on longest line
+        let actualStickerWidth = maxStickerWidth;
+        for (const line of displayLines) {
+          const lineWidth = line.length * fontSize * 0.6;
+          const lineRequiredWidth = lineWidth + (padding * 2);
+          if (lineRequiredWidth > actualStickerWidth) {
+            actualStickerWidth = Math.min(lineRequiredWidth, width * 0.45); // Max 45% of page width
+          }
         }
-      }
-      
-      // Calculate required height based on content - no line limit
-      const displayLines = processedLines;
-      const totalTextHeight = displayLines.length * lineHeight;
-      const requiredHeight = totalTextHeight + (padding * 2);
-      const stickerHeight = Math.max(50, requiredHeight); // Minimum 50 points
-      
-      // Calculate actual sticker width based on longest line
-      let actualStickerWidth = maxStickerWidth;
-      for (const line of displayLines) {
-        const lineWidth = line.length * fontSize * 0.6;
-        const lineRequiredWidth = lineWidth + (padding * 2);
-        if (lineRequiredWidth > actualStickerWidth) {
-          actualStickerWidth = Math.min(lineRequiredWidth, width * 0.45); // Max 45% of page width
+        
+        // Position sticker in bottom right corner with dynamic sizing
+        const stickerX = width - actualStickerWidth - 20; // 20 points from right edge
+        const stickerY = 20; // 20 points from bottom
+        
+        // Ensure sticker doesn't go off the page
+        const finalStickerX = Math.max(20, stickerX);
+        const finalStickerWidth = Math.min(actualStickerWidth, width - 40); // Ensure it fits on page
+        
+        // Draw subtle shadow effect (multiple rectangles with decreasing opacity)
+        const shadowOffset = 2;
+        const shadowOpacity = 0.1;
+        for (let i = 0; i < 3; i++) {
+          page.drawRectangle({
+            x: finalStickerX + (i * shadowOffset / 3),
+            y: stickerY - (i * shadowOffset / 3),
+            width: finalStickerWidth,
+            height: stickerHeight,
+            color: rgb(0, 0, 0),
+            opacity: shadowOpacity * (1 - i / 3),
+          });
         }
-      }
-      
-      // Position sticker in bottom right corner with dynamic sizing
-      const stickerX = width - actualStickerWidth - 20; // 20 points from right edge
-      const stickerY = 20; // 20 points from bottom
-      
-      // Ensure sticker doesn't go off the page
-      const finalStickerX = Math.max(20, stickerX);
-      const finalStickerWidth = Math.min(actualStickerWidth, width - 40); // Ensure it fits on page
-      
-      // Draw subtle shadow effect (multiple rectangles with decreasing opacity)
-      const shadowOffset = 2;
-      const shadowOpacity = 0.1;
-      for (let i = 0; i < 3; i++) {
-        firstPage.drawRectangle({
-          x: finalStickerX + (i * shadowOffset / 3),
-          y: stickerY - (i * shadowOffset / 3),
+        
+        // Draw main sticker background with gradient-like effect
+        // Create a more sophisticated background with multiple layers
+        
+        // Base background (slightly darker)
+        page.drawRectangle({
+          x: finalStickerX,
+          y: stickerY,
           width: finalStickerWidth,
           height: stickerHeight,
-          color: rgb(0, 0, 0),
-          opacity: shadowOpacity * (1 - i / 3),
+          color: rgb(0.98, 0.96, 0.9), // Very light cream background
+          borderColor: rgb(0.85, 0.75, 0.5), // Warm border color
+          borderWidth: 1.5,
         });
-      }
-      
-      // Draw main sticker background with gradient-like effect
-      // Create a more sophisticated background with multiple layers
-      
-      // Base background (slightly darker)
-      firstPage.drawRectangle({
-        x: finalStickerX,
-        y: stickerY,
-        width: finalStickerWidth,
-        height: stickerHeight,
-        color: rgb(0.98, 0.96, 0.9), // Very light cream background
-        borderColor: rgb(0.85, 0.75, 0.5), // Warm border color
-        borderWidth: 1.5,
-      });
-      
-      // Add a subtle top highlight
-      firstPage.drawRectangle({
-        x: finalStickerX + 1,
-        y: stickerY + stickerHeight - 8,
-        width: finalStickerWidth - 2,
-        height: 8,
-        color: rgb(1, 1, 1),
-        opacity: 0.3,
-      });
-      
-      // Add a subtle bottom shadow
-      firstPage.drawRectangle({
-        x: finalStickerX + 1,
-        y: stickerY + 1,
-        width: finalStickerWidth - 2,
-        height: 6,
-        color: rgb(0, 0, 0),
-        opacity: 0.05,
-      });
-      
-      // Calculate vertical centering offset
-      const textBlockHeight = displayLines.length * lineHeight;
-      const verticalOffset = (stickerHeight - textBlockHeight) / 2;
-      
-      // Draw each line of text with improved styling
-      displayLines.forEach((line, index) => {
-        const lineY = stickerY + stickerHeight - padding - (index * lineHeight) - verticalOffset;
         
-        // Calculate center position for the line with improved accuracy
-        const lineWidth = line.length * fontSize * 0.55; // More accurate multiplier for centering
-        const centerX = finalStickerX + (finalStickerWidth / 2) - (lineWidth / 2);
-        
-        // Add subtle text shadow for better readability
-        firstPage.drawText(line, {
-          x: centerX + 0.5,
-          y: lineY - 0.5,
-          size: fontSize,
-          color: rgb(0.1, 0.1, 0.1),
+        // Add a subtle top highlight
+        page.drawRectangle({
+          x: finalStickerX + 1,
+          y: stickerY + stickerHeight - 8,
+          width: finalStickerWidth - 2,
+          height: 8,
+          color: rgb(1, 1, 1),
           opacity: 0.3,
         });
         
-        // Main text
-        firstPage.drawText(line, {
-          x: centerX,
-          y: lineY,
-          size: fontSize,
-          color: rgb(0.25, 0.2, 0.15), // Warmer, more professional text color
-          maxWidth: finalStickerWidth - (padding * 2),
+        // Add a subtle bottom shadow
+        page.drawRectangle({
+          x: finalStickerX + 1,
+          y: stickerY + 1,
+          width: finalStickerWidth - 2,
+          height: 6,
+          color: rgb(0, 0, 0),
+          opacity: 0.05,
         });
-      });
-      
-      // Add a subtle accent line at the top
-      firstPage.drawRectangle({
-        x: finalStickerX + 2,
-        y: stickerY + stickerHeight - 2,
-        width: finalStickerWidth - 4,
-        height: 2,
-        color: rgb(0.7, 0.6, 0.4), // Accent color
-      });
-      
-      console.log(`Professional sticker added to bottom right corner of first page with ${displayLines.length} lines`);
+        
+        // Calculate vertical centering offset
+        const textBlockHeight = displayLines.length * lineHeight;
+        const verticalOffset = (stickerHeight - textBlockHeight) / 2;
+        
+        // Draw each line of text with improved styling
+        displayLines.forEach((line, index) => {
+          const lineY = stickerY + stickerHeight - padding - (index * lineHeight) - verticalOffset;
+          
+          // Calculate center position for the line with improved accuracy
+          const lineWidth = line.length * fontSize * 0.55; // More accurate multiplier for centering
+          const centerX = finalStickerX + (finalStickerWidth / 2) - (lineWidth / 2);
+          
+          // Add subtle text shadow for better readability
+          page.drawText(line, {
+            x: centerX + 0.5,
+            y: lineY - 0.5,
+            size: fontSize,
+            color: rgb(0.1, 0.1, 0.1),
+            opacity: 0.3,
+          });
+          
+          // Main text
+          page.drawText(line, {
+            x: centerX,
+            y: lineY,
+            size: fontSize,
+            color: rgb(0.25, 0.2, 0.15), // Warmer, more professional text color
+            maxWidth: finalStickerWidth - (padding * 2),
+          });
+        });
+        
+        // Add a subtle accent line at the top
+        page.drawRectangle({
+          x: finalStickerX + 2,
+          y: stickerY + stickerHeight - 2,
+          width: finalStickerWidth - 4,
+          height: 2,
+          color: rgb(0.7, 0.6, 0.4), // Accent color
+        });
+        
+        const pageNumber = pages.indexOf(page) + 1;
+        console.log(`Professional sticker added to bottom right corner of page ${pageNumber} with ${displayLines.length} lines`);
+      }
     }
 
     console.log('All fields processed');

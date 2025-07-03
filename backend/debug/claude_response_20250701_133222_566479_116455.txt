@@ -1,0 +1,10 @@
+I apologize, but I'm having difficulty extracting clear information from this image as it appears to be distorted or poorly formatted text. Much of the content appears to be jumbled characters and symbols that don't form coherent text.
+
+To provide accurate information, I would need a clearer version of the division order where I can read:
+- The operator name
+- Entity/owner information
+- State location
+- Effective date
+- Well information including property names, descriptions, decimal interests, and counties
+
+Without being able to read this information clearly, I cannot provide a reliable JSON output that would meet the required format. Could you please provide a clearer version of the division order or transcribe the relevant information in text form?

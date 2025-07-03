@@ -1,0 +1,29 @@
+I'll analyze this division order and extract the information into the requested JSON format.
+
+{
+    "operator": "COMSTOCK OIL & GAS - LOUISIANA, LLC",
+    "entity": "DWG LLC",
+    "state": "LA",
+    "effectiveDate": "June 24, 2023",
+    "wells": [
+        {
+            "propertyName": "LEGACY 10-3 HA 1-ALT",
+            "propertyDescription": "SEC E-NOI-1WP - PH1",
+            "decimalInterest": "0.00003000",
+            "county": "De Soto"
+        },
+        {
+            "propertyName": "LEGACY 10-3 HA 2-ALT",
+            "propertyDescription": "SEC E-NOI-1WP - PH1",
+            "decimalInterest": "0.00002000",
+            "county": "De Soto"
+        }
+    ]
+}
+
+I've extracted the following information from the document:
+1. The operator is COMSTOCK OIL & GAS - LOUISIANA, LLC
+2. The entity/owner appears to be DWG LLC
+3. The state is LA (Louisiana)
+4. The effective date is June 24, 2023 (from "DIVISION ORDER DATED JUNE 24, 2023")
+5. Two wells are listed with their respective details including property names, descriptions, decimal interests, and location in De Soto Parish/County.

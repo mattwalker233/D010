@@ -1,45 +1,21 @@
 ```json
 {
-    "operator": "UPCURVE ENERGY LLC",
-    "entity": "BLUE SKY MINERALS, LP",
-    "state": "TEXAS",
-    "effectiveDate": "05/01/2024",
+    "operator": "COMSTOCK OIL AND GAS, LP",
+    "entity": "CALLE DOCE AD4 LLC",
+    "state": "LA",
+    "effectiveDate": "FIRST SALES",
     "wells": [
         {
-            "propertyName": "CHERRY BOMB 10-9 UNIT A 3H HLCO",
-            "propertyDescription": "Property No: 4238900052",
-            "decimalInterest": "0.017584000",
-            "county": "REEVES"
+            "propertyName": "LEGACY 10-3 HC 1-ALT",
+            "propertyDescription": "SEC 3-10N-14W - BHL",
+            "decimalInterest": "0.00000072",
+            "county": "De Soto"
         },
         {
-            "propertyName": "CHERRY BOMB 10-9 UNIT A 62H HLCO",
-            "propertyDescription": "Property No: 4238900053",
-            "decimalInterest": "0.017584000",
-            "county": "REEVES"
-        },
-        {
-            "propertyName": "CHERRY HILL WEST 2H",
-            "propertyDescription": "Property No: 4238900059",
-            "decimalInterest": "0.008749130",
-            "county": "REEVES"
-        },
-        {
-            "propertyName": "CHERRY HILL EAST 1H",
-            "propertyDescription": "Property No: 4238900060",
-            "decimalInterest": "0.009147750",
-            "county": "REEVES"
-        },
-        {
-            "propertyName": "B BOMB EAST 3H",
-            "propertyDescription": "Property No: 4238900061",
-            "decimalInterest": "0.009118810",
-            "county": "REEVES"
-        },
-        {
-            "propertyName": "B BOMB WEST 4H",
-            "propertyDescription": "Property No: 4238900062",
-            "decimalInterest": "0.009000490",
-            "county": "REEVES"
+            "propertyName": "LEGACY 10-3 HC 2-ALT",
+            "propertyDescription": "SEC 3-10N-14W - BHL",
+            "decimalInterest": "0.00000070",
+            "county": "De Soto"
         }
     ]
 }

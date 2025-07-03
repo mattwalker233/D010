@@ -1,0 +1,889 @@
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from PyPDF2 import PdfReader
+import pytesseract
+from PIL import Image
+import io
+import anthropic
+import os
+from dotenv import load_dotenv
+import fitz  # PyMuPDF
+from pdf2image import convert_from_bytes
+import json
+from datetime import datetime
+import pathlib
+import glob
+import re
+import cv2
+import numpy as np
+
+# Set Tesseract path
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# Load environment variables
+load_dotenv()
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Create dashboard_data directory if it doesn't exist
+DASHBOARD_DATA_DIR = pathlib.Path(__file__).parent / "dashboard_data"
+DASHBOARD_DATA_DIR.mkdir(exist_ok=True)
+print(f"Dashboard data directory: {DASHBOARD_DATA_DIR}")
+
+# Initialize Claude client
+api_key = os.getenv("ANTHROPIC_API_KEY")
+claude = anthropic.Anthropic(api_key=api_key)
+
+# Define system prompt for Claude
+system_prompt = """You are a specialized assistant for extracting information from division orders. Your task is to analyze the provided text and extract specific information into a JSON object.
+
+Key points to look for:
+1. Operator: Usually found near the beginning of the document, often in the header or first paragraph
+2. Entity/Owner: Look for ownership information, often near the operator information
+3. State: Usually found in the property description or location section
+4. Effective Date: Look for dates, especially those labeled as "effective" or "commencement"
+5. Wells Information: Look for sections listing multiple wells, each with:
+   - Property Name/Well Name
+   - Property Description
+   - Decimal Interest (often shown as a decimal or percentage)
+   - County: Extract ONLY the county name, not the word "County". For example, if you see "Smith County", extract just "Smith"
+
+Format the response as a JSON object with this exact structure:
+{
+    "operator": "string",
+    "entity": "string",
+    "state": "string",
+    "effectiveDate": "string",
+    "wells": [
+        {
+            "propertyName": "string",
+            "propertyDescription": "string",
+            "decimalInterest": "string",
+            "county": "string"
+        }
+    ]
+}
+
+CRITICAL INSTRUCTIONS FOR WELL EXTRACTION:
+1. You MUST process EVERY well in the document, no exceptions
+2. Look for these patterns in the text:
+   - Tables with well information
+   - Numbered lists of wells
+   - Bulleted lists of wells
+   - Paragraphs containing well information
+   - Sections with multiple wells
+3. For each well, you MUST extract:
+   - The complete property name
+   - The complete property description
+   - The exact decimal interest
+   - The correct county
+4. If you find a pattern of wells (e.g., similar names with numbers), you MUST include ALL wells that follow that pattern
+5. If you're unsure about a well's information, include it anyway and mark any uncertain fields
+6. DO NOT stop after finding a few wells - continue until you've processed the ENTIRE document
+7. If you find a table of wells, process EVERY row in the table
+8. If you find a list of wells, process EVERY item in the list
+9. If you find wells in paragraphs, process EVERY well mentioned
+10. If you find wells in sections, process EVERY well in EVERY section
+
+Remember: Your primary goal is to extract EVERY well from the document, no matter how many there are or how they are formatted."""
+
+# US state name to abbreviation mapping
+STATE_ABBREVIATIONS = {
+    'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
+    'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
+    'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
+    'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+    'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
+    'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ',
+    'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH',
+    'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+    'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
+    'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY',
+    'district of columbia': 'DC', 'dc': 'DC',
+}
+for abbr in list(STATE_ABBREVIATIONS.values()):
+    STATE_ABBREVIATIONS[abbr.lower()] = abbr
+
+def normalize_state(state):
+    if not state:
+        return state
+    s = str(state).strip().lower()
+    return STATE_ABBREVIATIONS.get(s, state)
+
+def is_scanned_pdf(pdf_content: bytes) -> bool:
+    """
+    Detect if a PDF is scanned (image-based) or text-based.
+    """
+    try:
+        pdf_file = io.BytesIO(pdf_content)
+        reader = PdfReader(pdf_file)
+        
+        total_text = ""
+        for page in reader.pages:
+            try:
+                page_text = page.extract_text()
+                if page_text:
+                    total_text += page_text + "\n"
+            except Exception as e:
+                print(f"Error extracting text from page: {str(e)}")
+                continue
+        
+        # If we got very little text, it's likely scanned
+        if len(total_text.strip()) < 100:
+            print(f"PDF appears to be scanned (only {len(total_text.strip())} characters extracted)")
+            return True
+        
+        print(f"PDF appears to be text-based ({len(total_text.strip())} characters extracted)")
+        return False
+        
+    except Exception as e:
+        print(f"Error detecting PDF type: {str(e)}")
+        return True  # Assume scanned if detection fails
+
+def preprocess_image(pil_image):
+    """
+    Preprocess image for better OCR results using OpenCV.
+    """
+    # Convert PIL to OpenCV format
+    img = np.array(pil_image)
+    
+    # Convert to grayscale if it's RGB
+    if len(img.shape) == 3:
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    else:
+        gray = img
+    
+    # Apply Otsu thresholding for better text/background separation
+    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    
+    # Optional: Add slight morphological operations to clean up noise
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
+    cleaned = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+    
+    return cleaned
+
+def extract_text_from_pdf(pdf_content: bytes) -> str:
+    """
+    Extract text from PDF using proper detection and OCR with optimized preprocessing.
+    """
+    try:
+        # Step 1: Detect if PDF is scanned or text-based
+        is_scanned = is_scanned_pdf(pdf_content)
+        
+        if not is_scanned:
+            # Text-based PDF: Use direct extraction
+            print("Processing text-based PDF...")
+            pdf_file = io.BytesIO(pdf_content)
+            reader = PdfReader(pdf_file)
+            
+            text = ""
+            for page in reader.pages:
+                try:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+                except Exception as e:
+                    print(f"Error in direct text extraction: {str(e)}")
+                    continue
+            
+            if text.strip():
+                print(f"Successfully extracted {len(text.strip())} characters from text-based PDF")
+                return text
+            else:
+                print("Direct extraction failed, falling back to OCR...")
+                is_scanned = True  # Fall back to OCR
+        
+        if is_scanned:
+            # Scanned PDF: Use OCR with optimized preprocessing
+            print("Processing scanned PDF with optimized OCR...")
+            
+            try:
+                # Convert PDF to images using pdf2image at 300 DPI (better for OCR)
+                images = convert_from_bytes(pdf_content, dpi=300)
+                print(f"Converted PDF to {len(images)} images at 300 DPI")
+                
+                text = ""
+                for i, img in enumerate(images):
+                    try:
+                        print(f"Processing page {i + 1}...")
+                        
+                        # Method 1: Preprocessed image with PSM 6 (uniform block of text)
+                        img_processed = preprocess_image(img)
+                        page_text = pytesseract.image_to_string(img_processed, config='--psm 6')
+                        
+                        if is_readable_text(page_text):
+                            text += page_text + "\n"
+                            print(f"Page {i + 1}: Success with PSM 6 ({len(page_text.strip())} chars)")
+                            continue
+                        
+                        # Method 2: Try PSM 3 (automatic page layout detection)
+                        page_text = pytesseract.image_to_string(img_processed, config='--psm 3')
+                        
+                        if is_readable_text(page_text):
+                            text += page_text + "\n"
+                            print(f"Page {i + 1}: Success with PSM 3 ({len(page_text.strip())} chars)")
+                            continue
+                        
+                        # Method 3: Try PSM 4 (single column of variable sizes)
+                        page_text = pytesseract.image_to_string(img_processed, config='--psm 4')
+                        
+                        if is_readable_text(page_text):
+                            text += page_text + "\n"
+                            print(f"Page {i + 1}: Success with PSM 4 ({len(page_text.strip())} chars)")
+                            continue
+                        
+                        # Method 4: Try PSM 11 (sparse text)
+                        page_text = pytesseract.image_to_string(img_processed, config='--psm 11')
+                        
+                        if is_readable_text(page_text):
+                            text += page_text + "\n"
+                            print(f"Page {i + 1}: Success with PSM 11 ({len(page_text.strip())} chars)")
+                            continue
+                        
+                        # Method 5: Try with different preprocessing (PIL enhancement)
+                        from PIL import ImageEnhance, ImageFilter
+                        img_enhanced = img.convert('L')
+                        img_enhanced = img_enhanced.filter(ImageFilter.SHARPEN)
+                        img_enhanced = ImageEnhance.Contrast(img_enhanced).enhance(1.3)
+                        img_enhanced_processed = preprocess_image(img_enhanced)
+                        page_text = pytesseract.image_to_string(img_enhanced_processed, config='--psm 6')
+                        
+                        if is_readable_text(page_text):
+                            text += page_text + "\n"
+                            print(f"Page {i + 1}: Success with enhanced preprocessing ({len(page_text.strip())} chars)")
+                            continue
+                        
+                        # If all methods fail, save debug image
+                        print(f"Page {i + 1}: All OCR methods failed")
+                        debug_dir = pathlib.Path(__file__).parent / "debug"
+                        debug_dir.mkdir(exist_ok=True)
+                        
+                        # Save original and processed images for debugging
+                        img.save(debug_dir / f"page_{i+1}_original.png")
+                        img_processed_pil = Image.fromarray(img_processed)
+                        img_processed_pil.save(debug_dir / f"page_{i+1}_processed.png")
+                        print(f"Saved debug images: page_{i+1}_original.png, page_{i+1}_processed.png")
+                            
+                    except Exception as e:
+                        print(f"Error processing page {i + 1}: {str(e)}")
+                        continue
+                
+                if text.strip():
+                    print(f"OCR successfully extracted {len(text.strip())} characters")
+                    return text
+                else:
+                    raise Exception("OCR failed to extract any readable text")
+                
+            except Exception as e:
+                print(f"Optimized OCR failed: {str(e)}")
+                print("Falling back to PyMuPDF OCR...")
+                
+                # Fallback: Use PyMuPDF OCR with optimized settings
+                pdf_file = io.BytesIO(pdf_content)
+                doc = fitz.open(stream=pdf_file, filetype="pdf")
+                text = ""
+                
+                for page_num, page in enumerate(doc):
+                    try:
+                        # Convert page to image at moderate resolution (2x instead of 3x)
+                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                        
+                        # Apply preprocessing
+                        img_processed = preprocess_image(img)
+                        page_text = pytesseract.image_to_string(img_processed, config='--psm 6')
+                        
+                        if page_text.strip() and is_readable_text(page_text):
+                            text += page_text + "\n"
+                            print(f"Page {page_num + 1}: PyMuPDF OCR extracted {len(page_text.strip())} characters")
+                        
+                    except Exception as e:
+                        print(f"Error processing page {page_num + 1}: {str(e)}")
+                
+                if text.strip():
+                    print(f"PyMuPDF OCR extracted {len(text.strip())} characters")
+                    return text
+        
+        raise Exception("No readable text could be extracted from the PDF using any method")
+        
+    except Exception as e:
+        print(f"Error in text extraction: {str(e)}")
+        raise
+
+def is_readable_text(text: str) -> bool:
+    """
+    Check if extracted text is readable (not just random characters).
+    """
+    if not text.strip():
+        return False
+    
+    # Count readable characters (letters, numbers, spaces, punctuation)
+    readable_chars = sum(1 for c in text if c.isalnum() or c.isspace() or c in '.,;:!?()-/\'\"')
+    total_chars = len(text)
+    
+    # If more than 70% are readable characters, consider it readable
+    readability_ratio = readable_chars / total_chars if total_chars > 0 else 0
+    
+    # Also check for common words that should appear in division orders
+    common_words = ['operator', 'entity', 'state', 'date', 'well', 'property', 'interest', 'county', 'effective']
+    text_lower = text.lower()
+    word_matches = sum(1 for word in common_words if word in text_lower)
+    
+    print(f"Text readability: {readability_ratio:.2f} ({readable_chars}/{total_chars} chars), word matches: {word_matches}")
+    
+    return readability_ratio > 0.7 or word_matches >= 2
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        print(f"\n=== Processing PDF Upload ===")
+        print(f"Received file: {file.filename}")
+        
+        # Read file content
+        content = await file.read()
+        print(f"File size: {len(content)} bytes")
+        
+        # Extract text using the working method
+        text = extract_text_from_pdf(content)
+        print(f"Extracted text length: {len(text)} characters")
+        
+        # Save extracted text for debugging
+        debug_dir = pathlib.Path(__file__).parent / "debug"
+        debug_dir.mkdir(exist_ok=True)
+        debug_path = debug_dir / "extracted_text.txt"
+        with open(debug_path, "w", encoding="utf-8") as f:
+            f.write(text)
+        print(f"Saved extracted text to: {debug_path}")
+        
+        # Process with Claude
+        print("Sending text to Claude for processing...")
+        try:
+            message = claude.messages.create(
+                model="claude-3-7-sonnet-20250219",
+                max_tokens=15000,
+                temperature=0,
+                system=system_prompt,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Please analyze this division order and extract the information:\n\n{text}"
+                    }
+                ]
+            )
+            
+            # Parse Claude's response
+            response_text = message.content[0].text
+            print("Claude response received, length:", len(response_text))
+            
+            # Save Claude's response for debugging
+            claude_debug_path = debug_dir / "claude_response.txt"
+            with open(claude_debug_path, "w", encoding="utf-8") as f:
+                f.write(response_text)
+            print(f"Saved Claude response to: {claude_debug_path}")
+            
+            # Extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            if not json_match:
+                raise ValueError("No JSON object found in Claude's response")
+            
+            parsed_data = json.loads(json_match[0])
+            print(f"Parsed data: {json.dumps(parsed_data, indent=2)}")
+            
+            # Save parsed data for debugging
+            parsed_debug_path = debug_dir / "parsed_data.json"
+            with open(parsed_debug_path, "w", encoding="utf-8") as f:
+                json.dump(parsed_data, f, indent=2)
+            print(f"Saved parsed data to: {parsed_debug_path}")
+            
+            return {
+                "success": True,
+                "data": parsed_data
+            }
+            
+        except Exception as claude_error:
+            print(f"Error in Claude processing: {str(claude_error)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error processing with Claude: {str(claude_error)}"
+            )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing file: {str(e)}"
+        )
+
+def clean_decimal_interest(value):
+    """Clean decimal interest value by removing percentage signs and ensuring proper format."""
+    if not value:
+        return value
+    
+    if isinstance(value, str):
+        # Remove percentage sign if present
+        cleaned = value.replace('%', '').strip()
+        return cleaned
+    
+    return value
+
+@app.post("/api/process-text")
+async def process_text_input(text_data: dict):
+    """Process manually entered text instead of PDF upload."""
+    try:
+        print(f"\n=== Processing Manual Text Input ===")
+        
+        text = text_data.get("text", "")
+        if not text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="No text provided"
+            )
+        
+        print(f"Received text length: {len(text)} characters")
+        
+        # Save text for debugging
+        debug_dir = pathlib.Path(__file__).parent / "debug"
+        debug_dir.mkdir(exist_ok=True)
+        debug_path = debug_dir / "manual_text_input.txt"
+        with open(debug_path, "w", encoding="utf-8") as f:
+            f.write(text)
+        print(f"Saved manual text to: {debug_path}")
+        
+        # Process with Claude
+        print("Sending text to Claude for processing...")
+        try:
+            message = claude.messages.create(
+                model="claude-3-7-sonnet-20250219",
+                max_tokens=15000,
+                temperature=0,
+                system=system_prompt,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Please analyze this division order and extract the information:\n\n{text}"
+                    }
+                ]
+            )
+            
+            # Parse Claude's response
+            response_text = message.content[0].text
+            print("Claude response received, length:", len(response_text))
+            
+            # Save Claude's response for debugging
+            claude_debug_path = debug_dir / "claude_response.txt"
+            with open(claude_debug_path, "w", encoding="utf-8") as f:
+                f.write(response_text)
+            print(f"Saved Claude response to: {claude_debug_path}")
+            
+            # Extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            if not json_match:
+                raise ValueError("No JSON object found in Claude's response")
+            
+            parsed_data = json.loads(json_match[0])
+            print(f"Parsed data: {json.dumps(parsed_data, indent=2)}")
+            
+            # Save parsed data for debugging
+            parsed_debug_path = debug_dir / "parsed_data.json"
+            with open(parsed_debug_path, "w", encoding="utf-8") as f:
+                json.dump(parsed_data, f, indent=2)
+            print(f"Saved parsed data to: {parsed_debug_path}")
+            
+            return {
+                "success": True,
+                "data": parsed_data
+            }
+            
+        except Exception as claude_error:
+            print(f"Error in Claude processing: {str(claude_error)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error processing with Claude: {str(claude_error)}"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error processing text: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing text: {str(e)}"
+        )
+
+@app.post("/api/deploy")
+async def deploy_to_dashboard(data: dict):
+    try:
+        print("\n=== Deploy to Dashboard Request ===")
+        print("Received data:", json.dumps(data, indent=2))
+        
+        new_records = data.get("records", [])
+        if not new_records:
+            print("No records provided in deploy request")
+            return {"error": "No records provided"}
+        
+        print(f"Processing {len(new_records)} new records")
+        
+        # Clean decimal interests and normalize state in new records
+        for record in new_records:
+            if 'decimalInterest' in record:
+                original_value = record['decimalInterest']
+                cleaned_value = clean_decimal_interest(original_value)
+                if original_value != cleaned_value:
+                    print(f"Cleaned decimal interest: '{original_value}' -> '{cleaned_value}'")
+                record['decimalInterest'] = cleaned_value
+            if 'state' in record:
+                orig_state = record['state']
+                abbr = normalize_state(orig_state)
+                if abbr != orig_state:
+                    print(f"Normalized state: '{orig_state}' -> '{abbr}'")
+                record['state'] = abbr
+        
+        # Ensure the dashboard data directory exists
+        if not DASHBOARD_DATA_DIR.exists():
+            print(f"Creating dashboard data directory: {DASHBOARD_DATA_DIR}")
+            DASHBOARD_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Find the most recent file or create a new one
+        json_files = glob.glob(str(DASHBOARD_DATA_DIR / "*.json"))
+        existing_records = []
+        
+        if json_files:
+            # Use the most recent file
+            latest_file = max(json_files, key=lambda x: os.path.getctime(x))
+            print(f"Using existing file: {latest_file}")
+            try:
+                with open(latest_file, 'r') as f:
+                    file_data = json.load(f)
+                    if isinstance(file_data, list):
+                        existing_records = file_data
+                    else:
+                        existing_records = [file_data]
+                    print(f"Loaded {len(existing_records)} existing records from {latest_file}")
+            except Exception as e:
+                print(f"Error reading existing file {latest_file}: {str(e)}")
+                existing_records = []
+        else:
+            print("No existing dashboard files found, will create new one")
+        
+        # Create a unique key for each record to detect duplicates
+        def get_record_key(record):
+            return (
+                record.get('propertyName', '').strip().lower(),
+                record.get('operator', '').strip().lower(),
+                record.get('entity', '').strip().lower(),
+                record.get('effectiveDate', '').strip().lower()
+            )
+        
+        # Create a set of existing record keys
+        existing_keys = {get_record_key(rec) for rec in existing_records}
+        print(f"Found {len(existing_keys)} unique existing records")
+        
+        # Filter out new records that are duplicates
+        unique_new_records = []
+        duplicates_found = 0
+        
+        for new_record in new_records:
+            new_key = get_record_key(new_record)
+            if new_key in existing_keys:
+                print(f"Duplicate found and skipped: {new_record.get('propertyName', 'Unknown')}")
+                duplicates_found += 1
+            else:
+                unique_new_records.append(new_record)
+                existing_keys.add(new_key)
+        
+        print(f"Found {duplicates_found} duplicates, adding {len(unique_new_records)} unique records")
+        
+        # Combine existing records with unique new records
+        combined_records = existing_records + unique_new_records
+        
+        # Determine the filename
+        if json_files:
+            # Update the existing file
+            filename = latest_file
+            print(f"Updating existing file: {filename}")
+        else:
+            # Create a new file
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = DASHBOARD_DATA_DIR / f"dashboard_data_{timestamp}.json"
+            print(f"Creating new file: {filename}")
+        
+        print(f"\nSaving {len(combined_records)} records to {filename}")
+        print("First record example:", json.dumps(combined_records[0] if combined_records else {}, indent=2))
+        
+        # Save the combined records to the file
+        try:
+            with open(filename, "w") as f:
+                json.dump(combined_records, f, indent=2)
+            print(f"\nSuccessfully saved {len(combined_records)} records to {filename}")
+            
+            # Verify the file was written correctly
+            with open(filename, 'r') as f:
+                saved_data = json.load(f)
+                if len(saved_data) != len(combined_records):
+                    raise Exception(f"Data verification failed: expected {len(combined_records)} records, found {len(saved_data)}")
+                print("Data verification successful")
+            
+            return {
+                "message": f"Successfully deployed to dashboard ({duplicates_found} duplicates skipped)",
+                "records_count": len(combined_records),
+                "duplicates_skipped": duplicates_found,
+                "new_records_added": len(unique_new_records),
+                "filename": str(filename)
+            }
+        except Exception as e:
+            print(f"Error saving to file: {str(e)}")
+            print("Full traceback:")
+            import traceback
+            print(traceback.format_exc())
+            raise
+        
+    except Exception as e:
+        error_msg = f"Error deploying to dashboard: {str(e)}"
+        print("\nError:", error_msg)
+        print("Full traceback:")
+        import traceback
+        print(traceback.format_exc())
+        return {"error": error_msg}
+
+@app.get("/api/dashboard")
+async def get_dashboard_data():
+    try:
+        # Get all JSON files in the dashboard_data directory
+        json_files = glob.glob(str(DASHBOARD_DATA_DIR / "*.json"))
+        print(f"Found {len(json_files)} JSON files in {DASHBOARD_DATA_DIR}")
+        
+        if not json_files:
+            return {"records": []}
+        
+        # Read only the most recent file
+        latest_file = max(json_files, key=lambda x: os.path.getctime(x))
+        print(f"Reading from most recent file: {latest_file}")
+        
+        with open(latest_file, 'r') as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                all_records = data
+            else:
+                all_records = [data]
+        
+        print(f"Total records found: {len(all_records)}")
+        
+        # Sort records by effective date (newest first)
+        all_records.sort(key=lambda x: x.get('effectiveDate', ''), reverse=True)
+        
+        return {"records": all_records}
+    except Exception as e:
+        error_msg = f"Error fetching dashboard data: {str(e)}"
+        print(error_msg)
+        return {"error": error_msg}
+
+@app.post("/api/dashboard/update")
+async def update_dashboard_record(data: dict):
+    try:
+        index = data.get('index')
+        notes = data.get('notes', '')
+        status = data.get('status', '')
+        
+        # Validate status if provided
+        valid_statuses = ['Executed', 'Curative', 'Title issue', 'Pending Review']
+        if status and status not in valid_statuses:
+            return {"error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"}
+        
+        # Get all JSON files in the dashboard data directory
+        json_files = [f for f in os.listdir(DASHBOARD_DATA_DIR) if f.endswith('.json')]
+        if not json_files:
+            return {"error": "No dashboard data found"}
+            
+        # Read the most recent file
+        latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
+        file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
+        
+        with open(file_path, 'r') as f:
+            records = json.load(f)
+            
+        if 0 <= index < len(records):
+            # Update notes if provided
+            if 'notes' in data:
+                records[index]['notes'] = notes
+            
+            # Update status if provided
+            if 'status' in data:
+                records[index]['status'] = status
+            
+            # Save the updated records back to the file
+            with open(file_path, 'w') as f:
+                json.dump(records, f, indent=2)
+                
+            return {"success": True, "message": "Record updated successfully"}
+        else:
+            return {"error": "Invalid record index"}
+            
+    except Exception as e:
+        print(f"Error updating dashboard record: {str(e)}")
+        return {"error": str(e)}
+
+@app.delete("/api/dashboard/delete")
+async def delete_record(index: int):
+    print("=" * 50)
+    print("DELETE REQUEST RECEIVED!")
+    print("=" * 50)
+    try:
+        print(f"Delete request received for index: {index}")
+        print(f"Index type: {type(index)}")
+        
+        # Get all JSON files in the dashboard data directory
+        try:
+            json_files = [f for f in os.listdir(DASHBOARD_DATA_DIR) if f.endswith('.json')]
+            print(f"Found {len(json_files)} JSON files: {json_files}")
+        except Exception as e:
+            print(f"Error listing files in {DASHBOARD_DATA_DIR}: {e}")
+            raise HTTPException(status_code=500, detail=f"Error accessing dashboard data directory: {str(e)}")
+        
+        if not json_files:
+            print("No JSON files found")
+            raise HTTPException(status_code=404, detail="No dashboard data found")
+            
+        # Read the most recent file - use a more robust method
+        try:
+            latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
+        except Exception as e:
+            print(f"Error finding latest file with getctime: {e}")
+            # Fallback: use the last file alphabetically (should be the most recent timestamp)
+            try:
+                latest_file = sorted(json_files)[-1]
+                print(f"Using fallback method, latest file: {latest_file}")
+            except Exception as e2:
+                print(f"Error with fallback method: {e2}")
+                raise HTTPException(status_code=500, detail=f"Error finding latest file: {str(e2)}")
+        
+        file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
+        print(f"Using file: {file_path}")
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            print(f"File does not exist: {file_path}")
+            raise HTTPException(status_code=404, detail=f"Dashboard file not found: {latest_file}")
+        
+        # Read the file
+        try:
+            with open(file_path, 'r') as f:
+                records = json.load(f)
+        except Exception as e:
+            print(f"Error reading file {file_path}: {e}")
+            raise HTTPException(status_code=500, detail=f"Error reading dashboard file: {str(e)}")
+            
+        print(f"Loaded {len(records)} records from file")
+        print(f"Attempting to delete record at index {index}")
+        print(f"Records type: {type(records)}")
+        
+        # Validate index
+        if not isinstance(index, int):
+            print(f"Index is not an integer: {index} (type: {type(index)})")
+            raise HTTPException(status_code=400, detail=f"Invalid index type: {type(index)}")
+        
+        if 0 <= index < len(records):
+            try:
+                deleted_record = records.pop(index)
+                print(f"Deleted record: {deleted_record.get('propertyName', 'Unknown')}")
+                
+                # Save the updated records back to the file
+                with open(file_path, 'w') as f:
+                    json.dump(records, f, indent=2)
+                    
+                print(f"Successfully saved {len(records)} records back to file")
+                return {"message": "Record deleted successfully"}
+            except Exception as e:
+                print(f"Error during delete operation: {e}")
+                raise HTTPException(status_code=500, detail=f"Error during delete operation: {str(e)}")
+        else:
+            print(f"Invalid index {index}, records length: {len(records)}")
+            raise HTTPException(status_code=404, detail=f"Record not found at index {index}")
+            
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        print(f"Unexpected error deleting record: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+@app.post("/api/dashboard/deduplicate")
+async def deduplicate_dashboard():
+    try:
+        print("\n=== Deduplication Request ===")
+        
+        # Get all JSON files in the dashboard data directory
+        json_files = glob.glob(str(DASHBOARD_DATA_DIR / "*.json"))
+        if not json_files:
+            return {"error": "No dashboard data found"}
+        
+        # Use the most recent file
+        latest_file = max(json_files, key=lambda x: os.path.getctime(x))
+        print(f"Deduplicating file: {latest_file}")
+        
+        # Load records
+        with open(latest_file, 'r') as f:
+            records = json.load(f)
+        
+        print(f"Loaded {len(records)} records for deduplication")
+        
+        # Create a unique key for each record to detect duplicates
+        def get_record_key(record):
+            return (
+                record.get('propertyName', '').strip().lower(),
+                record.get('operator', '').strip().lower(),
+                record.get('entity', '').strip().lower(),
+                record.get('effectiveDate', '').strip().lower()
+            )
+        
+        # Deduplicate by keeping the first occurrence of each unique key
+        seen_keys = set()
+        deduped = []
+        duplicates_removed = 0
+        
+        for record in records:
+            key = get_record_key(record)
+            if key in seen_keys:
+                print(f"Removing duplicate: {record.get('propertyName', 'Unknown')} - {record.get('operator', 'Unknown')}")
+                duplicates_removed += 1
+            else:
+                seen_keys.add(key)
+                deduped.append(record)
+        
+        print(f"Removed {duplicates_removed} duplicates, keeping {len(deduped)} unique records")
+        
+        # Save the deduplicated records back to the same file
+        with open(latest_file, 'w') as f:
+            json.dump(deduped, f, indent=2)
+        
+        return {
+            "message": f"Successfully deduplicated dashboard data",
+            "duplicates_removed": duplicates_removed,
+            "records_remaining": len(deduped),
+            "file": latest_file
+        }
+    except Exception as e:
+        print(f"Error during deduplication: {str(e)}")
+        print("Full traceback:")
+        import traceback
+        print(traceback.format_exc())
+        return {"error": str(e)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000) 
