@@ -104,6 +104,26 @@ CRITICAL INSTRUCTIONS FOR WELL EXTRACTION:
 9. If you find wells in paragraphs, process EVERY well mentioned
 10. If you find wells in sections, process EVERY well in EVERY section
 
+IMPORTANT: When you find multiple interests for the same well (same property name and description but different decimal interests), create SEPARATE well entries for each interest. Do NOT combine them into a single entry. Each unique combination of property name, description, and decimal interest should be its own well entry.
+
+Example: If you find:
+- Well: "SMITH 1-2H" with interest 0.02500000
+- Well: "SMITH 1-2H" with interest 0.01500000
+
+Create TWO separate entries:
+{
+    "propertyName": "SMITH 1-2H",
+    "propertyDescription": "Section 1, Block A",
+    "decimalInterest": "0.02500000",
+    "county": "Smith"
+},
+{
+    "propertyName": "SMITH 1-2H", 
+    "propertyDescription": "Section 1, Block A",
+    "decimalInterest": "0.01500000",
+    "county": "Smith"
+}
+
 Remember: Your primary goal is to extract EVERY well from the document, no matter how many there are or how they are formatted."""
 
 # US state name to abbreviation mapping
