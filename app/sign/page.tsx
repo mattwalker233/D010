@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment, useRef } from 'react';
+import { useState, useEffect, Fragment, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Combobox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
@@ -25,7 +25,7 @@ interface SignaturePosition {
   page: number;
 }
 
-export default function SignPage() {
+function SignPage() {
   const [file, setFile] = useState<File | null>(null);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
@@ -712,4 +712,14 @@ export default function SignPage() {
       )}
     </div>
   );
-} 
+}
+
+function SignPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignPage />
+    </Suspense>
+  );
+}
+
+export default SignPageWrapper; 

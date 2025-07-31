@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const extractedData = await extractDivisionOrderData(text, stateCode)
+    const extractedData = await extractDivisionOrderData(text)
 
     return NextResponse.json({
       success: true,
