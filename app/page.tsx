@@ -74,7 +74,7 @@ export default function Home() {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('http://localhost:8000/api/upload', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/upload`, {
           method: 'POST',
           body: formData,
         });
@@ -218,7 +218,7 @@ export default function Home() {
       console.log('Making request to:', 'http://localhost:8000/api/deploy');
 
       try {
-        const response = await fetch('http://localhost:8000/api/deploy', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/deploy`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

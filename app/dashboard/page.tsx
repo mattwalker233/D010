@@ -204,7 +204,7 @@ export default function Dashboard() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:8000/api/dashboard');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard`);
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
@@ -257,7 +257,7 @@ export default function Dashboard() {
       console.log('handleNotesBlur called with index:', index);
       console.log('Notes value:', editingNotes[index]);
       
-      const response = await fetch(`http://localhost:8000/api/dashboard/update`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +300,7 @@ export default function Dashboard() {
       console.log('handleStatusBlur called with index:', index);
       console.log('Status value:', editingStatus[index]);
       
-      const response = await fetch(`http://localhost:8000/api/dashboard/update`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -397,7 +397,7 @@ export default function Dashboard() {
         }
         
         console.log('Using fallback index:', fallbackIndex);
-        const response = await fetch(`http://localhost:8000/api/dashboard/delete?index=${fallbackIndex}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${fallbackIndex}`, {
           method: 'DELETE',
         });
 
@@ -417,7 +417,7 @@ export default function Dashboard() {
       }
 
       console.log('Sending delete request with actual index:', actualIndex);
-      const response = await fetch(`http://localhost:8000/api/dashboard/delete?index=${actualIndex}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${actualIndex}`, {
         method: 'DELETE',
       });
 
@@ -442,7 +442,7 @@ export default function Dashboard() {
   const handleDeduplicate = async () => {
     try {
       setError(null);
-      const response = await fetch('http://localhost:8000/api/dashboard/deduplicate', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/deduplicate`, {
         method: 'POST',
       });
       
@@ -467,14 +467,14 @@ export default function Dashboard() {
       setError(null);
       
       // Try the new clear endpoint first
-      let response = await fetch('http://localhost:8000/api/dashboard/clear', {
+      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/clear`, {
         method: 'POST',
       });
 
       if (!response.ok) {
         // Fallback: use deploy endpoint with empty array
         console.log('Clear endpoint not available, using deploy fallback');
-        response = await fetch('http://localhost:8000/api/deploy', {
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/deploy`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

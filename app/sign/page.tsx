@@ -65,7 +65,7 @@ export default function SignPage() {
       console.log('Loading PDF from backend:', filename);
       
       // Fetch the PDF from the backend
-      const response = await fetch(`http://localhost:8000/api/pdf/${encodeURIComponent(filename)}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/pdf/${encodeURIComponent(filename)}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -109,7 +109,7 @@ export default function SignPage() {
   useEffect(() => {
     async function fetchEntities() {
       try {
-        const response = await fetch('/api/entities');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/entities`);
         if (!response.ok) throw new Error('Failed to fetch entities');
         const data = await response.json();
         setEntities(data);
@@ -270,7 +270,7 @@ export default function SignPage() {
       // Add sticker placement option
       formData.append('placeStickerOnEveryPage', placeStickerOnEveryPage.toString());
 
-      const response = await fetch('/api/sign-pdf', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/sign-pdf`, {
         method: 'POST',
         body: formData,
       });
@@ -372,7 +372,7 @@ export default function SignPage() {
       console.log(`Visual rotation: ${rotation}°, sending actual rotation: ${actualRotation}° to backend`);
 
       console.log('Sending rotation request to backend...');
-      const response = await fetch('/api/rotate-pdf', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/rotate-pdf`, {
         method: 'POST',
         body: formData,
       });
