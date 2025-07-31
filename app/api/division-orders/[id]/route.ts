@@ -5,8 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const data = await request.json() as Partial<DivisionOrder>;
     const db = await getDb();
@@ -46,7 +47,7 @@ export async function PATCH(
         }
 
         if (updates.length > 0) {
-          values.push(params.id);
+          values.push(id);
           await db.run(
             `UPDATE division_orders SET ${updates.join(', ')} WHERE id = ?`,
             values
@@ -57,7 +58,7 @@ export async function PATCH(
       // Update wells if provided
       if (data.wells) {
         // Delete existing wells
-        await db.run('DELETE FROM wells WHERE division_order_id = ?', [params.id]);
+        await db.run('DELETE FROM wells WHERE division_order_id = ?', [id]);
 
         // Insert new wells
         for (const well of data.wells) {
@@ -66,7 +67,7 @@ export async function PATCH(
              VALUES (?, ?, ?, ?, ?)`,
             [
               well.id || uuidv4(),
-              params.id,
+              id,
               well.wellName,
               well.propertyDescription,
               well.decimalInterest
