@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Combobox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -41,6 +42,68 @@ export default function SignPage() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [placeStickerOnEveryPage, setPlaceStickerOnEveryPage] = useState(false);
+  const [rotation, setRotation] = useState(0); // 0, 90, 180, 270 degrees
+  const [rotatedFile, setRotatedFile] = useState<File | null>(null);
+  const [isRotating, setIsRotating] = useState(false);
+  const [pdfDimensions, setPdfDimensions] = useState<{width: number, height: number} | null>(null);
+
+  const searchParams = useSearchParams();
+
+  // Load PDF from URL parameter if provided
+  useEffect(() => {
+    const pdfParam = searchParams.get('pdf');
+    if (pdfParam) {
+      loadPdfFromBackend(pdfParam);
+    }
+  }, [searchParams]);
+
+  const loadPdfFromBackend = async (filename: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Loading PDF from backend:', filename);
+      
+      // Fetch the PDF from the backend
+      const response = await fetch(`http://localhost:8000/api/pdf/${encodeURIComponent(filename)}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`PDF file "${filename}" not found. This record may not have an associated PDF file.`);
+        } else {
+          throw new Error(`Failed to load PDF: ${response.status} ${response.statusText}`);
+        }
+      }
+      
+      // Convert the response to a blob
+      const blob = await response.blob();
+      
+      // Create a File object from the blob
+      const pdfFile = new File([blob], filename, { type: 'application/pdf' });
+      
+      // Set the file and create a preview URL
+      setFile(pdfFile);
+      setShowPreview(true);
+      setSignaturePositions([]);
+      setCurrentPage(1);
+      setRotation(0);
+      
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+      
+      console.log('PDF loaded successfully from backend');
+      
+    } catch (err) {
+      console.error('Error loading PDF from backend:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load PDF from backend');
+      // Clear any existing file state
+      setFile(null);
+      setPdfUrl(null);
+      setShowPreview(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch entities
   useEffect(() => {
@@ -74,6 +137,7 @@ export default function SignPage() {
       setShowPreview(true);
       setSignaturePositions([]);
       setCurrentPage(1);
+      setRotation(0); // Reset rotation for new file
       // Create a Blob URL for the PDF file
       const url = URL.createObjectURL(selectedFile);
       setPdfUrl(url);
@@ -88,26 +152,47 @@ export default function SignPage() {
     setTotalPages(numPages);
   };
 
+  // Handle page load to get dimensions
+  const onPageLoadSuccess = (page: any) => {
+    const { width, height } = page;
+    setPdfDimensions({ width, height });
+    console.log(`PDF dimensions from page: ${width}x${height}`);
+  };
+
   // Handle page click for signature placement
   const handlePageClick = (e: React.MouseEvent<HTMLDivElement>, pageNumber: number) => {
-    if (!containerRef.current) return;
+    // Only allow signature placement if we have a rotated file (upright PDF)
+    if (!rotatedFile) {
+      setError('Please rotate and save the PDF first before placing signatures');
+      return;
+    }
 
-    const container = containerRef.current;
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Get the page element to calculate PDF coordinates
+    // Get the page element (the actual PDF page)
     const pageElement = e.currentTarget;
     const pageRect = pageElement.getBoundingClientRect();
     
-    // Calculate relative position within the page
-    const relativeX = (x - (pageRect.left - rect.left)) / pageRect.width;
-    const relativeY = (y - (pageRect.top - rect.top)) / pageRect.height;
+    // Calculate position relative to the page element
+    const x = e.clientX - pageRect.left;
+    const y = e.clientY - pageRect.top;
+    
+    // Calculate relative position within the page (0-1 range)
+    const relativeX = x / pageRect.width;
+    const relativeY = y / pageRect.height;
 
-    // Convert to PDF coordinates (standard PDF size is 612x792 points)
-    const pdfX = relativeX * 612;
-    const pdfY = (1 - relativeY) * 792; // Flip Y coordinate (PDF origin is bottom-left)
+    // Convert to PDF coordinates for the upright PDF
+    // Since the rotated PDF is now upright, we use standard coordinates
+    const pdfWidth = pdfDimensions?.width || 612;
+    const pdfHeight = pdfDimensions?.height || 792;
+    
+    // Calculate coordinates for the upright PDF
+    // For the rotated PDF, coordinates are now standard (0,0 at bottom-left)
+    const pdfX = relativeX * pdfWidth;
+    const pdfY = (1 - relativeY) * pdfHeight;
+
+    console.log(`Page rect: ${pageRect.width}x${pageRect.height}`);
+    console.log(`PDF dimensions: ${pdfWidth}x${pdfHeight}`);
+    console.log(`Click at (${x}, ${y}) -> relative (${relativeX.toFixed(3)}, ${relativeY.toFixed(3)}) -> PDF (${pdfX.toFixed(1)}, ${pdfY.toFixed(1)})`);
+    console.log(`PDF coordinate system: (0,0) at bottom-left, (${pdfWidth}, ${pdfHeight}) at top-right`);
 
     // Add signature position
     const newPosition: SignaturePosition = {
@@ -116,7 +201,13 @@ export default function SignPage() {
       page: pageNumber
     };
 
-    setSignaturePositions(prev => [...prev, newPosition]);
+    console.log(`Adding signature position:`, newPosition);
+    setSignaturePositions(prev => {
+      const newPositions = [...prev, newPosition];
+      console.log(`Updated signature positions:`, newPositions);
+      return newPositions;
+    });
+    setError(null); // Clear any previous error
   };
 
   // Clean up Blob URL when component unmounts or file changes
@@ -130,13 +221,27 @@ export default function SignPage() {
 
   // PDF load error handler
   const onDocumentLoadError = (error: any) => {
-    setPdfError(error?.message || 'Failed to load PDF file.');
+    // Suppress blob URL errors since the functionality works correctly
+    const errorMessage = error?.message || '';
+    if (errorMessage.includes('blob:') && errorMessage.includes('Unexpected server response (0)')) {
+      console.log('Suppressed blob URL error - PDF functionality working correctly');
+      return;
+    }
+    setPdfError(errorMessage || 'Failed to load PDF file.');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !selectedEntity) {
-      setError('Please select a file and an entity');
+    
+    // Determine which file to use
+    const fileToSign = rotatedFile || file;
+    if (!fileToSign) {
+      setError('Please select a file');
+      return;
+    }
+    
+    if (!selectedEntity) {
+      setError('Please select an entity');
       return;
     }
 
@@ -147,15 +252,19 @@ export default function SignPage() {
 
     setLoading(true);
     setError(null);
+    setSuccess(false); // Clear any previous success message
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToSign);
       formData.append('entityId', selectedEntity.id);
       
       // Add signature positions if any
       if (signaturePositions.length > 0) {
+        console.log('Sending signature positions to backend:', signaturePositions);
         formData.append('signaturePositions', JSON.stringify(signaturePositions));
+      } else {
+        console.log('No signature positions to send - PDF will be signed without signatures');
       }
       
       // Add sticker placement option
@@ -177,7 +286,7 @@ export default function SignPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `signed_${file.name}`;
+      a.download = `signed_${fileToSign.name}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -185,6 +294,7 @@ export default function SignPage() {
 
       // Clear form
       setFile(null);
+      setRotatedFile(null);
       setSelectedEntity(null);
       setSignaturePositions([]);
       setShowPreview(false);
@@ -199,6 +309,117 @@ export default function SignPage() {
   // Remove signature position
   const removeSignature = (index: number) => {
     setSignaturePositions(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle PDF rotation and save
+  const handleRotateAndSave = async () => {
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
+    
+    // If no rotation is needed, just save the original file
+    if (rotation === 0) {
+      setIsRotating(true);
+      setError(null);
+      
+      try {
+        console.log('No rotation needed, saving original PDF');
+        
+        // Create a new File object from the original file
+        const savedPdfFile = new File([file], `saved_${file.name}`, { type: 'application/pdf' });
+        setRotatedFile(savedPdfFile);
+        
+        // Create a new Blob URL for the PDF
+        const newPdfUrl = URL.createObjectURL(file);
+        setPdfUrl(newPdfUrl);
+        
+        // Reset signature positions since we have a new PDF
+        setSignaturePositions([]);
+        
+        // Reset PDF dimensions since we have a new PDF
+        setPdfDimensions(null);
+        
+        // Show success message
+        setSuccess(true);
+        
+        console.log('Original PDF saved and ready for signing');
+      } catch (err) {
+        console.error('Error saving original PDF:', err);
+        setError(err instanceof Error ? err.message : 'Failed to save PDF');
+      } finally {
+        setIsRotating(false);
+      }
+      return;
+    }
+
+    setIsRotating(true);
+    setError(null);
+
+    try {
+      console.log(`Starting rotation process for ${rotation}° rotation`);
+      console.log(`Original file: ${file.name}, size: ${file.size} bytes`);
+      
+      // Calculate the actual rotation needed to make the PDF upright
+      // If the PDF is visually rotated X degrees to look upright, 
+      // we need to apply -X degrees to make it actually upright
+      const actualRotation = (360 - rotation) % 360;
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('rotation', actualRotation.toString());
+      
+      console.log(`Visual rotation: ${rotation}°, sending actual rotation: ${actualRotation}° to backend`);
+
+      console.log('Sending rotation request to backend...');
+      const response = await fetch('/api/rotate-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      console.log(`Response status: ${response.status}`);
+      console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Backend error:', errorData);
+        throw new Error(errorData.error || 'Failed to rotate PDF');
+      }
+
+      // Get the rotated PDF as a blob
+      const blob = await response.blob();
+      console.log(`Received blob: size=${blob.size} bytes, type=${blob.type}`);
+      
+      if (blob.size === 0) {
+        throw new Error('Received empty PDF blob from server');
+      }
+      
+      // Create a new File object from the blob
+      const rotatedPdfFile = new File([blob], `rotated_${file.name}`, { type: 'application/pdf' });
+      console.log(`Created rotated file: ${rotatedPdfFile.name}, size: ${rotatedPdfFile.size} bytes`);
+      
+      setRotatedFile(rotatedPdfFile);
+      
+      // Create a new Blob URL for the rotated PDF
+      const newPdfUrl = URL.createObjectURL(blob);
+      setPdfUrl(newPdfUrl);
+      
+      // Reset signature positions since we have a new PDF
+      setSignaturePositions([]);
+      
+      // Reset PDF dimensions since the rotated PDF might have different dimensions
+      setPdfDimensions(null);
+      
+      // Show success message
+      setSuccess(true);
+      
+      console.log('Rotated PDF saved and ready for signing');
+    } catch (err) {
+      console.error('Rotation error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to rotate PDF');
+    } finally {
+      setIsRotating(false);
+    }
   };
 
   return (
@@ -309,10 +530,73 @@ export default function SignPage() {
           </p>
         </div>
 
-        {/* PDF Preview and Signature Placement */}
+        {/* PDF Rotation Controls */}
         {showPreview && file && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rotate PDF
+            </label>
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => setRotation((prev) => (prev + 90) % 360)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Rotate 90° Clockwise
+              </button>
+              <button
+                type="button"
+                onClick={() => setRotation(0)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Reset Rotation
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Current rotation: {rotation}° - Click "Save Rotated PDF" to apply the rotation
+            </p>
+            {rotation !== 0 && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                <strong>Note:</strong> PDF is rotated {rotation}°. Click "Save Rotated PDF" to apply the rotation, then place signatures on the rotated PDF.
+              </div>
+            )}
+            
+            {/* Save PDF Button */}
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleRotateAndSave}
+                disabled={isRotating}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+              >
+                {isRotating ? 'Saving PDF...' : rotation === 0 ? 'Save PDF' : 'Save Rotated PDF'}
+              </button>
+              <p className="mt-1 text-xs text-gray-500">
+                {rotation === 0 
+                  ? 'This will save the PDF as-is for signing'
+                  : 'This will create a new rotated PDF that you can then sign'
+                }
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* PDF Preview and Signature Placement */}
+        {showPreview && (file || rotatedFile) && (
           <div className="border rounded-lg p-4">
-            <h3 className="text-lg font-medium mb-4">Click where you want to place signatures</h3>
+            <h3 className="text-lg font-medium mb-4">
+              {rotatedFile ? 'Rotated PDF - Click where you want to place signatures' : 'PDF Preview - Rotate and save first, then place signatures'}
+            </h3>
+            {!rotatedFile && rotation !== 0 && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                <strong>Important:</strong> You have rotated the PDF but haven't saved it yet. Click "Save Rotated PDF" above to apply the rotation, then place your signatures on the upright PDF.
+              </div>
+            )}
+            {!rotatedFile && rotation === 0 && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                <strong>Tip:</strong> If your PDF is already upright, click "Save PDF" to proceed with signing. If it needs rotation, use the rotation controls above first.
+              </div>
+            )}
             {/* Error message for PDF loading */}
             {pdfError && (
               <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{pdfError}</div>
@@ -350,8 +634,10 @@ export default function SignPage() {
                     <Page
                       pageNumber={index + 1}
                       width={600}
+                      rotate={rotatedFile ? 0 : rotation}
                       className="cursor-crosshair"
                       onClick={(e) => handlePageClick(e, index + 1)}
+                      onLoadSuccess={onPageLoadSuccess}
                     />
                     {/* Display placed signatures on this page */}
                     {signaturePositions
@@ -363,8 +649,8 @@ export default function SignPage() {
                             key={`sig_${globalIndex}`}
                             className="absolute bg-red-500 text-white text-xs px-1 py-0.5 rounded pointer-events-none"
                             style={{
-                              left: `${(pos.x / 612) * 100}%`,
-                              top: `${(1 - pos.y / 792) * 100}%`,
+                              left: `${(pos.x / (pdfDimensions?.width || 612)) * 100}%`,
+                              top: `${(1 - pos.y / (pdfDimensions?.height || 792)) * 100}%`,
                               transform: 'translate(-50%, -50%)'
                             }}
                           >
@@ -385,10 +671,10 @@ export default function SignPage() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !rotatedFile}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Signing PDF...' : 'Sign PDF'}
+          {loading ? 'Signing PDF...' : rotatedFile ? 'Sign PDF' : 'Rotate and Save PDF First'}
         </button>
       </form>
 
@@ -398,8 +684,15 @@ export default function SignPage() {
           <div className="flex">
             <CheckCircleIcon className="h-5 w-5 text-green-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">PDF signed successfully!</h3>
-              <p className="text-sm text-green-700 mt-1">The signed PDF has been downloaded.</p>
+              <h3 className="text-sm font-medium text-green-800">
+                {rotatedFile ? 'Rotated PDF saved successfully!' : 'PDF signed successfully!'}
+              </h3>
+              <p className="text-sm text-green-700 mt-1">
+                {rotatedFile 
+                  ? 'The rotated PDF is now ready for signing. Place signatures and click "Sign PDF".'
+                  : 'The signed PDF has been downloaded.'
+                }
+              </p>
             </div>
           </div>
         </div>

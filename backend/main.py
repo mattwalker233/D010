@@ -16,6 +16,7 @@ import glob
 from PIL import ImageEnhance
 import re
 from PIL import ImageOps
+from fastapi.responses import Response
 
 # Set Tesseract path
 try:
@@ -48,6 +49,11 @@ app.add_middleware(
 DASHBOARD_DATA_DIR = pathlib.Path(__file__).parent / "dashboard_data"
 DASHBOARD_DATA_DIR.mkdir(exist_ok=True)
 print(f"Dashboard data directory: {DASHBOARD_DATA_DIR}")
+
+# Create PDF storage directory
+PDF_STORAGE_DIR = pathlib.Path(__file__).parent / "pdf_storage"
+PDF_STORAGE_DIR.mkdir(exist_ok=True)
+print(f"PDF storage directory: {PDF_STORAGE_DIR}")
 
 # Initialize Claude client
 api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -350,6 +356,12 @@ async def upload_file(file: UploadFile = File(...)):
         is_scanned = is_scanned_pdf(content)
         print(f"PDF is {'scanned' if is_scanned else 'text-based'}")
         
+        # Save the original PDF file
+        original_pdf_path = PDF_STORAGE_DIR / file.filename
+        with open(original_pdf_path, "wb") as f:
+            f.write(content)
+        print(f"Saved original PDF to: {original_pdf_path}")
+        
         # Extract text
         try:
             text = extract_text_from_pdf(content)
@@ -406,7 +418,8 @@ async def upload_file(file: UploadFile = File(...)):
                 return {
                     "success": True,
                     "data": parsed_data,
-                    "is_scanned": is_scanned
+                    "is_scanned": is_scanned,
+                    "original_pdf_path": file.filename
                 }
                 
             except Exception as claude_error:
@@ -458,6 +471,12 @@ async def upload_multiple_files(files: list[UploadFile] = File(...)):
                 # Check if it's a scanned PDF
                 is_scanned = is_scanned_pdf(content)
                 print(f"PDF is {'scanned' if is_scanned else 'text-based'}")
+                
+                # Save the original PDF file
+                original_pdf_path = PDF_STORAGE_DIR / file.filename
+                with open(original_pdf_path, "wb") as f:
+                    f.write(content)
+                print(f"Saved original PDF to: {original_pdf_path}")
                 
                 # Extract text
                 try:
@@ -516,7 +535,8 @@ async def upload_multiple_files(files: list[UploadFile] = File(...)):
                             "fileName": file.filename,
                             "success": True,
                             "data": parsed_data,
-                            "is_scanned": is_scanned
+                            "is_scanned": is_scanned,
+                            "original_pdf_path": file.filename
                         })
                         
                         print(f"Successfully processed {file.filename}")
@@ -592,11 +612,19 @@ async def deploy_to_dashboard(data: dict):
         print("Received data:", json.dumps(data, indent=2))
         
         new_records = data.get("records", [])
+        replace_existing = data.get("replace", False)  # New parameter to control replacement
         if not new_records:
             print("No records provided in deploy request")
             return {"error": "No records provided"}
         
         print(f"Processing {len(new_records)} new records")
+        print(f"Replace existing records: {replace_existing}")
+        
+        # Debug: Check for originalPdfPath fields
+        records_with_pdfs = [r for r in new_records if r.get('originalPdfPath')]
+        print(f"Records with PDF paths: {len(records_with_pdfs)}")
+        for record in records_with_pdfs:
+            print(f"  - {record.get('propertyName', 'Unknown')}: {record.get('originalPdfPath')}")
         
         # Clean decimal interests and normalize state in new records
         for record in new_records:
@@ -612,6 +640,11 @@ async def deploy_to_dashboard(data: dict):
                 if abbr != orig_state:
                     print(f"Normalized state: '{orig_state}' -> '{abbr}'")
                 record['state'] = abbr
+            
+            # Add scan date for new records
+            current_time = datetime.now()
+            record['dateScannedIn'] = current_time.strftime("%Y-%m-%d")
+            print(f"Added scan date for {record.get('propertyName', 'Unknown')}: {record['dateScannedIn']}")
         
         # Ensure the dashboard data directory exists
         if not DASHBOARD_DATA_DIR.exists():
@@ -622,10 +655,20 @@ async def deploy_to_dashboard(data: dict):
         json_files = glob.glob(str(DASHBOARD_DATA_DIR / "*.json"))
         existing_records = []
         
-        if json_files:
-            # Use the most recent file
+        # Prioritize the main file if it exists
+        main_file = DASHBOARD_DATA_DIR / "dashboard_data_main.json"
+        if main_file.exists():
+            latest_file = str(main_file)
+            print(f"Using main file: {latest_file}")
+        elif json_files:
+            # Fall back to most recent file
             latest_file = max(json_files, key=lambda x: os.path.getctime(x))
-            print(f"Using existing file: {latest_file}")
+            print(f"Using most recent file: {latest_file}")
+        else:
+            latest_file = None
+            print("No existing dashboard files found, will create new one")
+        
+        if latest_file:
             try:
                 with open(latest_file, 'r') as f:
                     file_data = json.load(f)
@@ -653,34 +696,32 @@ async def deploy_to_dashboard(data: dict):
         existing_keys = {get_record_key(rec) for rec in existing_records}
         print(f"Found {len(existing_keys)} unique existing records")
         
-        # Filter out new records that are duplicates
-        unique_new_records = []
-        duplicates_found = 0
-        
-        for new_record in new_records:
-            new_key = get_record_key(new_record)
-            if new_key in existing_keys:
-                print(f"Duplicate found and skipped: {new_record.get('propertyName', 'Unknown')}")
-                duplicates_found += 1
-            else:
-                unique_new_records.append(new_record)
-                existing_keys.add(new_key)
-        
-        print(f"Found {duplicates_found} duplicates, adding {len(unique_new_records)} unique records")
-        
-        # Combine existing records with unique new records
-        combined_records = existing_records + unique_new_records
-        
-        # Determine the filename
-        if json_files:
-            # Update the existing file
-            filename = latest_file
-            print(f"Updating existing file: {filename}")
+        if replace_existing:
+            # Replace all existing records with new ones
+            print("Replacing all existing records with new records")
+            combined_records = new_records
         else:
-            # Create a new file
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = DASHBOARD_DATA_DIR / f"dashboard_data_{timestamp}.json"
-            print(f"Creating new file: {filename}")
+            # Filter out new records that are duplicates
+            unique_new_records = []
+            duplicates_found = 0
+            
+            for new_record in new_records:
+                new_key = get_record_key(new_record)
+                if new_key in existing_keys:
+                    print(f"Duplicate found and skipped: {new_record.get('propertyName', 'Unknown')}")
+                    duplicates_found += 1
+                else:
+                    unique_new_records.append(new_record)
+                    existing_keys.add(new_key)
+            
+            print(f"Found {duplicates_found} duplicates, adding {len(unique_new_records)} unique records")
+            
+            # Combine existing records with unique new records
+            combined_records = existing_records + unique_new_records
+        
+        # Determine the filename - always use main file for consistency
+        filename = DASHBOARD_DATA_DIR / "dashboard_data_main.json"
+        print(f"Saving to main file: {filename}")
         
         print(f"\nSaving {len(combined_records)} records to {filename}")
         print("First record example:", json.dumps(combined_records[0] if combined_records else {}, indent=2))
@@ -730,9 +771,15 @@ async def get_dashboard_data():
         if not json_files:
             return {"records": []}
         
-        # Read only the most recent file
-        latest_file = max(json_files, key=lambda x: os.path.getctime(x))
-        print(f"Reading from most recent file: {latest_file}")
+        # Prioritize the main file if it exists
+        main_file = DASHBOARD_DATA_DIR / "dashboard_data_main.json"
+        if main_file.exists():
+            latest_file = str(main_file)
+            print(f"Using main file: {latest_file}")
+        else:
+            # Fall back to most recent file
+            latest_file = max(json_files, key=lambda x: os.path.getctime(x))
+            print(f"Using most recent file: {latest_file}")
         
         with open(latest_file, 'r') as f:
             data = json.load(f)
@@ -760,7 +807,7 @@ async def update_dashboard_record(data: dict):
         status = data.get('status', '')
         
         # Validate status if provided
-        valid_statuses = ['Executed', 'Curative', 'Title issue', 'Pending Review']
+        valid_statuses = ['Good', 'Low interest', 'High interest', 'Title issue']
         if status and status not in valid_statuses:
             return {"error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"}
         
@@ -768,10 +815,15 @@ async def update_dashboard_record(data: dict):
         json_files = [f for f in os.listdir(DASHBOARD_DATA_DIR) if f.endswith('.json')]
         if not json_files:
             return {"error": "No dashboard data found"}
-            
-        # Read the most recent file
-        latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
-        file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
+        
+        # Prioritize the main file if it exists
+        main_file = os.path.join(DASHBOARD_DATA_DIR, "dashboard_data_main.json")
+        if os.path.exists(main_file):
+            file_path = main_file
+        else:
+            # Fall back to most recent file
+            latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
+            file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
         
         with open(file_path, 'r') as f:
             records = json.load(f)
@@ -945,6 +997,55 @@ async def deduplicate_dashboard():
         import traceback
         print(traceback.format_exc())
         return {"error": str(e)}
+
+@app.post("/api/dashboard/clear")
+async def clear_dashboard():
+    try:
+        print("\n=== Clear Dashboard Request ===")
+        
+        # Clear the main dashboard file
+        main_file = DASHBOARD_DATA_DIR / "dashboard_data_main.json"
+        
+        # Save empty array to the main file
+        with open(main_file, 'w') as f:
+            json.dump([], f, indent=2)
+        
+        print(f"Dashboard cleared. Saved empty array to {main_file}")
+        
+        return {
+            "message": "Dashboard cleared successfully",
+            "records_removed": "all"
+        }
+    except Exception as e:
+        error_msg = f"Error clearing dashboard: {str(e)}"
+        print(error_msg)
+        return {"error": error_msg}
+
+@app.get("/api/pdf/{filename}")
+async def get_pdf_file(filename: str):
+    try:
+        # Security: prevent directory traversal
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        
+        pdf_path = PDF_STORAGE_DIR / filename
+        if not pdf_path.exists():
+            raise HTTPException(status_code=404, detail="PDF file not found")
+        
+        # Read and return the PDF file
+        with open(pdf_path, "rb") as f:
+            pdf_content = f.read()
+        
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"inline; filename={filename}"}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error serving PDF file {filename}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error serving PDF file")
 
 if __name__ == "__main__":
     import uvicorn

@@ -74,7 +74,8 @@ export function DivisionOrderUploader({ onUploadComplete, onError }: DivisionOrd
       // The data is already in the correct format from claude-client.ts
       const previewOrder: DivisionOrder = {
         ...responseData.data,
-        id: `preview-${Date.now()}`
+        id: `preview-${Date.now()}`,
+        originalPdfPath: responseData.original_pdf_path
       };
 
       setUploadProgress(100);

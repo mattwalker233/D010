@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PDFDocument, PDFForm, PDFTextField, PDFSignature, PDFPage, rgb } from 'pdf-lib';
+import { PDFDocument, PDFForm, PDFTextField, PDFSignature, PDFPage, rgb, degrees } from 'pdf-lib';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -226,16 +226,19 @@ export async function POST(request: Request) {
     if (signaturePositionsStr) {
       try {
         manualSignaturePositions = JSON.parse(signaturePositionsStr);
+        console.log('Received signature positions:', manualSignaturePositions);
       } catch (error) {
         console.error('Error parsing signature positions:', error);
       }
+    } else {
+      console.log('No signature positions provided');
     }
 
     // Convert the file to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
     const pdfBytes = new Uint8Array(arrayBuffer);
 
-    // Load the PDF
+    // Load the PDF (should already be upright from rotation step)
     const pdfDoc = await PDFDocument.load(pdfBytes);
     console.log('PDF document loaded, pages:', pdfDoc.getPageCount());
 
@@ -244,34 +247,62 @@ export async function POST(request: Request) {
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       const pageNum = i + 1;
+      const { width: pageWidth, height: pageHeight } = page.getSize();
+      
+      console.log(`Page ${pageNum} dimensions: ${pageWidth}x${pageHeight}`);
       
       // Get manual signature positions for this page
       const pageSignaturePositions = manualSignaturePositions.filter(pos => pos.page === pageNum);
       
-      // Only place signatures where user manually clicked
+          // Only place signatures if user actually clicked to place them
+    if (pageSignaturePositions.length === 0) {
+      console.log(`No signatures placed by user on page ${pageNum} - skipping signature placement`);
+    } else {
+      console.log(`Processing ${pageSignaturePositions.length} signatures for page ${pageNum}`);
+      
       for (const position of pageSignaturePositions) {
         try {
           // Convert base64 signature to PNG
           const signatureData = entity.signature.split(',')[1];
           const signatureBytes = Buffer.from(signatureData, 'base64');
+          console.log(`Signature data length: ${signatureData.length}, bytes length: ${signatureBytes.length}`);
+          
           const signatureImage = await pdfDoc.embedPng(signatureBytes);
+          console.log(`Signature image embedded successfully`);
           
           // Calculate signature size (standard size)
           const signatureWidth = 120;
           const signatureHeight = 50;
           
-          // Draw signature at the exact position
+          // Draw signature at the exact position clicked (centered on click point)
+          const signatureX = position.x - signatureWidth / 2;
+          const signatureY = position.y - signatureHeight / 2;
+          
+          console.log(`Page ${pageNum} dimensions: ${pageWidth}x${pageHeight}`);
+          console.log(`Click position: (${position.x}, ${position.y})`);
+          console.log(`Signature size: ${signatureWidth}x${signatureHeight}`);
+          console.log(`Drawing signature at (${signatureX}, ${signatureY}) on page ${pageNum}`);
+          console.log(`Signature bounds: (${signatureX}, ${signatureY}) to (${signatureX + signatureWidth}, ${signatureY + signatureHeight})`);
+          
+          // Check if signature coordinates are within page bounds
+          if (signatureX < 0 || signatureY < 0 || 
+              signatureX + signatureWidth > pageWidth || 
+              signatureY + signatureHeight > pageHeight) {
+            console.warn(`Signature may be outside page bounds: x=${signatureX}, y=${signatureY}, page=${pageWidth}x${pageHeight}`);
+          }
+          
           page.drawImage(signatureImage, {
-            x: position.x - signatureWidth / 2, // Center the signature on the click point
-            y: position.y - signatureHeight / 2,
+            x: signatureX,
+            y: signatureY,
             width: signatureWidth,
             height: signatureHeight,
           });
-          console.log(`Signature added at position (${position.x}, ${position.y}) on page ${pageNum}`);
+                    console.log(`Signature successfully drawn at position (${position.x}, ${position.y}) on page ${pageNum}`);
         } catch (err) {
           console.error('Error processing signature:', err);
         }
       }
+    }
     }
 
     // Add sticker to pages based on user preference
@@ -281,47 +312,23 @@ export async function POST(request: Request) {
       
       for (const page of pagesToSticker) {
         const { width, height } = page.getSize();
+        console.log(`Page dimensions: ${width}x${height}`);
         
         // Process text to preserve original line breaks
-        const fontSize = 9; // Slightly larger font for better readability
-        const lineHeight = fontSize + 2; // Better line spacing
-        const padding = 12; // Increased padding for better spacing
-        const cornerRadius = 6; // Rounded corners
-        const maxStickerWidth = Math.min(320, width * 0.35); // Slightly smaller max width
+        const fontSize = 8; // Smaller font for more compact sticker
+        const lineHeight = fontSize + 1; // Tighter line spacing
+        const padding = 12; // Increased padding to prevent text cutoff
+        const cornerRadius = 4; // Smaller rounded corners
+        const maxStickerWidth = Math.min(400, width * 0.4); // Larger max width to accommodate longer text
         const textMaxWidth = maxStickerWidth - (padding * 2);
         
-        // Split text by original line breaks first
-        const originalLines = stickerText.split('\n');
-        const processedLines: string[] = [];
-        
-        // Process each original line
-        for (const originalLine of originalLines) {
-          const words = originalLine.trim().split(' ');
-          let currentLine = '';
-          
-          for (const word of words) {
-            const testLine = currentLine ? `${currentLine} ${word}` : word;
-            // More accurate width estimation using character count
-            const estimatedWidth = testLine.length * fontSize * 0.6; // More accurate multiplier
-            
-            if (estimatedWidth > textMaxWidth && currentLine) {
-              processedLines.push(currentLine);
-              currentLine = word;
-            } else {
-              currentLine = testLine;
-            }
-          }
-          
-          if (currentLine) {
-            processedLines.push(currentLine);
-          }
-        }
+        // Preserve exact format from entity - split by line breaks only
+        const displayLines = stickerText.split('\n').filter(line => line.trim() !== '');
         
         // Calculate required height based on content - no line limit
-        const displayLines = processedLines;
         const totalTextHeight = displayLines.length * lineHeight;
         const requiredHeight = totalTextHeight + (padding * 2);
-        const stickerHeight = Math.max(50, requiredHeight); // Minimum 50 points
+        const stickerHeight = Math.max(35, requiredHeight); // Minimum 35 points
         
         // Calculate actual sticker width based on longest line
         let actualStickerWidth = maxStickerWidth;
@@ -329,13 +336,15 @@ export async function POST(request: Request) {
           const lineWidth = line.length * fontSize * 0.6;
           const lineRequiredWidth = lineWidth + (padding * 2);
           if (lineRequiredWidth > actualStickerWidth) {
-            actualStickerWidth = Math.min(lineRequiredWidth, width * 0.45); // Max 45% of page width
+            actualStickerWidth = Math.min(lineRequiredWidth, width * 0.5); // Max 50% of page width for long lines
           }
         }
         
-        // Position sticker in bottom right corner with dynamic sizing
-        const stickerX = width - actualStickerWidth - 20; // 20 points from right edge
-        const stickerY = 20; // 20 points from bottom
+        // Position sticker in bottom right corner of the upright PDF
+        const stickerX = width - actualStickerWidth - 10;
+        const stickerY = 10;
+        
+        console.log(`Sticker positioning: x=${stickerX}, y=${stickerY}, width=${actualStickerWidth}, height=${stickerHeight}`);
         
         // Ensure sticker doesn't go off the page
         const finalStickerX = Math.max(20, stickerX);
@@ -397,13 +406,12 @@ export async function POST(request: Request) {
         displayLines.forEach((line, index) => {
           const lineY = stickerY + stickerHeight - padding - (index * lineHeight) - verticalOffset;
           
-          // Calculate center position for the line with improved accuracy
-          const lineWidth = line.length * fontSize * 0.55; // More accurate multiplier for centering
-          const centerX = finalStickerX + (finalStickerWidth / 2) - (lineWidth / 2);
+          // Left-align text with extra padding to prevent cutoff
+          const textX = finalStickerX + padding + 2;
           
           // Add subtle text shadow for better readability
           page.drawText(line, {
-            x: centerX + 0.5,
+            x: textX + 0.5,
             y: lineY - 0.5,
             size: fontSize,
             color: rgb(0.1, 0.1, 0.1),
@@ -412,11 +420,11 @@ export async function POST(request: Request) {
           
           // Main text
           page.drawText(line, {
-            x: centerX,
+            x: textX,
             y: lineY,
             size: fontSize,
             color: rgb(0.25, 0.2, 0.15), // Warmer, more professional text color
-            maxWidth: finalStickerWidth - (padding * 2),
+            maxWidth: finalStickerWidth - (padding * 2) - 4,
           });
         });
         

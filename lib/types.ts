@@ -13,6 +13,7 @@ export interface DivisionOrder {
   effectiveDate: string
   notes?: string
   wells: Well[]
+  originalPdfPath?: string
 }
 
 export interface ExtractedData {

@@ -20,6 +20,7 @@ interface DivisionOrder {
   state: string;
   effectiveDate: string;
   wells: Well[];
+  originalPdfPath?: string;
 }
 
 export default function Home() {
@@ -84,6 +85,9 @@ export default function Home() {
 
         const data = await response.json();
         
+        console.log(`Backend response for ${file.name}:`, data);
+        console.log(`Original PDF path from backend:`, data.original_pdf_path);
+        
         if (!data.success || !data.data) {
           throw new Error(`No data extracted from ${file.name}`);
         }
@@ -91,8 +95,13 @@ export default function Home() {
         // Create the order object
         const order: DivisionOrder = {
           ...data.data,
-          id: `result-${Date.now()}-${i}`
+          id: `result-${Date.now()}-${i}`,
+          originalPdfPath: data.original_pdf_path
         };
+
+        console.log(`Created order for ${file.name}:`, order);
+        console.log(`PDF path in order: ${order.originalPdfPath}`);
+        console.log(`Order type check:`, typeof order.originalPdfPath, order.originalPdfPath === null, order.originalPdfPath === undefined);
 
         results.push(order);
         console.log(`Successfully processed ${file.name}`);
@@ -177,6 +186,7 @@ export default function Home() {
 
     try {
       console.log('Starting deployment with data:', editedResults);
+      console.log('Sample result with PDF path:', editedResults.find(r => r.originalPdfPath));
       
       // Flatten all wells from all results for dashboard format
       const dashboardData = editedResults.flatMap(result => 
@@ -190,13 +200,20 @@ export default function Home() {
           state: result.state || '',
           effectiveDate: result.effectiveDate || '',
           status: '',
-          notes: ''
+          notes: '',
+          originalPdfPath: result.originalPdfPath || null
         }))
       );
 
       console.log('Prepared dashboard data:', dashboardData);
+      console.log('Sample record with PDF path:', dashboardData.find(record => record.originalPdfPath));
+      console.log('Records with PDF paths:', dashboardData.filter(record => record.originalPdfPath).length);
+      console.log('Full dashboard data being sent:', JSON.stringify(dashboardData, null, 2));
 
-      const requestBody = JSON.stringify({ records: dashboardData });
+      const requestBody = JSON.stringify({ 
+        records: dashboardData,
+        replace: true  // Replace all existing records with new ones
+      });
       console.log('Request body:', requestBody);
       console.log('Making request to:', 'http://localhost:8000/api/deploy');
 

@@ -1,21 +1,15 @@
 ```json
 {
-    "operator": "COMSTOCK OIL AND GAS, LP",
-    "entity": "CALLE DOCE AD4 LLC",
-    "state": "LA",
-    "effectiveDate": "FIRST SALES",
+    "operator": "CONTINENTAL RESOURCES INC",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "OK",
+    "effectiveDate": "06/10/2025",
     "wells": [
         {
-            "propertyName": "LEGACY 10-3 HC 1-ALT",
-            "propertyDescription": "SEC 3-10N-14W - BHL",
-            "decimalInterest": "0.00000072",
-            "county": "De Soto"
-        },
-        {
-            "propertyName": "LEGACY 10-3 HC 2-ALT",
-            "propertyDescription": "SEC 3-10N-14W - BHL",
-            "decimalInterest": "0.00000070",
-            "county": "De Soto"
+            "propertyName": "PAYNE 1-10H",
+            "propertyDescription": "SEC 10-T13N-R13W SPACING UNIT 640",
+            "decimalInterest": "0.00822752",
+            "county": "BLAINE"
         }
     ]
 }

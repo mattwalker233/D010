@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiFile, FiRefreshCw, FiTrash2, FiDownload } from 'react-icons/fi';
+import { FiFile, FiRefreshCw, FiTrash2, FiDownload, FiPlay } from 'react-icons/fi';
 import * as ExcelJS from 'exceljs';
 
 interface DashboardRecord {
@@ -16,6 +16,8 @@ interface DashboardRecord {
   effectiveDate: string;
   status: string;
   notes: string;
+  dateScannedIn?: string;
+  originalPdfPath?: string;
 }
 
 // State abbreviation mapping
@@ -80,48 +82,153 @@ const getStateAbbreviation = (state: string): string => {
   return STATE_ABBREVIATIONS[normalizedState] || normalizedState;
 };
 
+// Function to format county to uppercase
+const formatCounty = (county: string): string => {
+  return county ? county.toUpperCase() : '';
+};
+
+// Function to format date to MM/DD/YYYY format
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  // If it's not a date (like "FIRST SALES", "INITIAL PRODUCTION"), return as is
+  const nonDateKeywords = ['FIRST SALES', 'INITIAL PRODUCTION', 'FIRST PRODUCTION', 'All Credits Accrued', 'Next Settlement', 'Date of First Sales', 'Date of First Production'];
+  if (nonDateKeywords.some(keyword => dateString.toUpperCase().includes(keyword))) {
+    return dateString;
+  }
+  
+  try {
+    let date: Date;
+    
+    // Handle formats like "04082025" (MMDDYYYY)
+    if (/^\d{8}$/.test(dateString)) {
+      const month = parseInt(dateString.substring(0, 2));
+      const day = parseInt(dateString.substring(2, 4));
+      const year = parseInt(dateString.substring(4, 8));
+      date = new Date(year, month - 1, day);
+    }
+    // Handle formats like "03232025" (MMDDYYYY)
+    else if (/^\d{8}$/.test(dateString)) {
+      const month = parseInt(dateString.substring(0, 2));
+      const day = parseInt(dateString.substring(2, 4));
+      const year = parseInt(dateString.substring(4, 8));
+      date = new Date(year, month - 1, day);
+    }
+    // Handle formats like "3/1/25" (M/D/YY)
+    else if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(dateString)) {
+      const parts = dateString.split('/');
+      const month = parseInt(parts[0]);
+      const day = parseInt(parts[1]);
+      const year = parseInt(parts[2]) + 2000; // Assume 20xx for 2-digit years
+      date = new Date(year, month - 1, day);
+    }
+    // Handle formats like "3/1/2025" (M/D/YYYY)
+    else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
+      const parts = dateString.split('/');
+      const month = parseInt(parts[0]);
+      const day = parseInt(parts[1]);
+      const year = parseInt(parts[2]);
+      date = new Date(year, month - 1, day);
+    }
+    // Handle formats like "06/10/2025" (MM/DD/YYYY)
+    else if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      const parts = dateString.split('/');
+      const month = parseInt(parts[0]);
+      const day = parseInt(parts[1]);
+      const year = parseInt(parts[2]);
+      date = new Date(year, month - 1, day);
+    }
+    // Handle formats like "April 1, 2025" or "May 1, 2022"
+    else if (/^[A-Za-z]+\s+\d{1,2},?\s+\d{4}$/.test(dateString)) {
+      date = new Date(dateString);
+    }
+    // Handle formats like "February 28, 2025"
+    else if (/^[A-Za-z]+\s+\d{1,2},?\s+\d{4}$/.test(dateString)) {
+      date = new Date(dateString);
+    }
+    // Try parsing as a general date
+    else {
+      date = new Date(dateString);
+    }
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return dateString; // Return original if parsing failed
+    }
+    
+    // Format as MM/DD/YYYY
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${month}/${day}/${year}`;
+  } catch (error) {
+    // If any error occurs, return the original string
+    return dateString;
+  }
+};
+
+// Function to format decimal interest with leading zero
+const formatDecimalInterest = (decimalString: string): string => {
+  if (!decimalString) return '';
+  
+  // Remove any existing leading zeros and decimal point
+  let cleaned = decimalString.replace(/^0+/, '').replace(/^\./, '');
+  
+  // If it's empty after cleaning, return '0'
+  if (!cleaned) return '0';
+  
+  // Add leading zero and decimal point
+  return `0.${cleaned}`;
+};
+
 export default function Dashboard() {
   const [records, setRecords] = useState<DashboardRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingNotes, setEditingNotes] = useState<{ [key: number]: string }>({});
   const [editingStatus, setEditingStatus] = useState<{ [key: number]: string }>({});
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalRecords, setTotalRecords] = useState(0);
+  const [executingIndex, setExecutingIndex] = useState<number | null>(null);
   const router = useRouter();
 
   // Status options
-  const statusOptions = ['Executed', 'Curative', 'Title issue', 'Pending Review'];
+  const statusOptions = ['Good', 'Low interest', 'High interest', 'Title issue'];
 
   const fetchDashboardData = async (page: number = 1) => {
-    setIsLoading(true);
-    setError(null);
     try {
-      console.log('Fetching dashboard data...');
-      const response = await fetch(`http://localhost:8000/api/dashboard?page=${page}&page_size=150`);
-      console.log('Response status:', response.status);
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch('http://localhost:8000/api/dashboard');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
       
       const data = await response.json();
-      console.log('Dashboard data:', data);
+      console.log('Dashboard data received:', data);
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch dashboard data');
+      if (data.error) {
+        throw new Error(data.error);
       }
       
-      if (!data.records) {
-        throw new Error('No records found in response');
-      }
+      const allRecords = data.records || [];
+      console.log('All records:', allRecords);
+      console.log('Sample record structure:', allRecords[0]);
       
-      setRecords(data.records);
-      setTotalPages(data.total_pages);
-      setTotalRecords(data.total);
-      setCurrentPage(data.page);
+      setTotalRecords(allRecords.length);
+      
+      // Simple pagination - show all records for now
+      setRecords(allRecords);
+      setTotalPages(1);
+      setCurrentPage(1);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
@@ -338,23 +445,80 @@ export default function Dashboard() {
       const response = await fetch('http://localhost:8000/api/dashboard/deduplicate', {
         method: 'POST',
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to deduplicate records');
+      }
+      
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      // Refresh the data
+      fetchDashboardData(currentPage);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while deduplicating');
+    }
+  };
+
+  const handleClearDashboard = async () => {
+    try {
+      setError(null);
+      
+      // Try the new clear endpoint first
+      let response = await fetch('http://localhost:8000/api/dashboard/clear', {
+        method: 'POST',
+      });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to deduplicate: ${response.status} - ${errorText}`);
+        // Fallback: use deploy endpoint with empty array
+        console.log('Clear endpoint not available, using deploy fallback');
+        response = await fetch('http://localhost:8000/api/deploy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            records: [],
+            replace: true
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to clear dashboard');
       }
 
       const result = await response.json();
-      console.log('Deduplication result:', result);
-      
-      // Refresh the data to show the deduplicated results
-      fetchDashboardData();
-      
-      // Show success message
-      setError(`Success: ${result.message}. Removed ${result.duplicates_removed} duplicates.`);
-    } catch (error) {
-      console.error('Error deduplicating:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred while deduplicating');
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Refresh the data
+      fetchDashboardData(currentPage);
+      setError(`Dashboard cleared. ${totalRecords} records removed.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while clearing the dashboard');
+    }
+  };
+
+  const handleExecute = (record: DashboardRecord, index: number) => {
+    if (!record.originalPdfPath) {
+      setError('No PDF file available for this record');
+      return;
+    }
+    
+    setExecutingIndex(index);
+    setError(null);
+    
+    // Navigate to sign page with the PDF file path
+    const filename = record.originalPdfPath.split('/').pop() || record.originalPdfPath.split('\\').pop();
+    if (filename) {
+      router.push(`/sign?pdf=${encodeURIComponent(filename)}`);
+    } else {
+      setError('Invalid PDF file path');
+      setExecutingIndex(null);
     }
   };
 
@@ -377,6 +541,7 @@ export default function Dashboard() {
         { header: 'Property Description', key: 'propertyDescription', width: 40 },
         { header: 'Decimal Interest', key: 'decimalInterest', width: 20 },
         { header: 'Effective Date', key: 'effectiveDate', width: 20 },
+        { header: 'Date Scanned In', key: 'dateScannedIn', width: 20 },
         { header: 'Notes', key: 'notes', width: 30 }
       ];
       
@@ -397,10 +562,11 @@ export default function Dashboard() {
           operator: record.operator || '',
           entity: record.entity || '',
           state: getStateAbbreviation(record.state),
-          county: record.county || '',
+          county: formatCounty(record.county),
           propertyDescription: record.propertyDescription || '',
-          decimalInterest: record.decimalInterest || '',
-          effectiveDate: record.effectiveDate || '',
+          decimalInterest: formatDecimalInterest(record.decimalInterest),
+          effectiveDate: formatDate(record.effectiveDate),
+          dateScannedIn: record.dateScannedIn ? formatDate(record.dateScannedIn) : 'Not available',
           notes: record.notes || ''
         });
       });
@@ -453,7 +619,11 @@ export default function Dashboard() {
         record.county?.toLowerCase() || '',
         record.propertyDescription?.toLowerCase() || '',
         record.decimalInterest?.toLowerCase() || '',
+        formatDecimalInterest(record.decimalInterest)?.toLowerCase() || '',
         record.effectiveDate?.toLowerCase() || '',
+        formatDate(record.effectiveDate)?.toLowerCase() || '',
+        record.dateScannedIn?.toLowerCase() || '',
+        formatDate(record.dateScannedIn || '')?.toLowerCase() || '',
         record.status?.toLowerCase() || '',
         record.notes?.toLowerCase() || ''
       ];
@@ -510,6 +680,13 @@ export default function Dashboard() {
               </svg>
               Remove Duplicates
             </button>
+            <button
+              onClick={handleClearDashboard}
+              className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center gap-2 text-sm"
+            >
+              <FiTrash2 className="h-4 w-4" />
+              Clear Dashboard
+            </button>
           </div>
         </div>
 
@@ -542,6 +719,7 @@ export default function Dashboard() {
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-64">Property Description</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-24">Decimal Interest</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-24">Effective Date</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-24">Date Scanned In</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-20">Notes</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-16">Actions</th>
                   </tr>
@@ -566,22 +744,27 @@ export default function Dashboard() {
                             ))}
                           </select>
                         ) : (
-                          <div
-                            onClick={() => setEditingStatus(prev => ({ ...prev, [index]: record.status || '' }))}
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-100 transition-colors duration-150 ${
-                              record.status === 'Executed' 
-                                ? 'bg-green-100 text-green-800'
-                                : record.status === 'Curative'
-                                ? 'bg-orange-100 text-orange-800'
-                                : record.status === 'Title issue'
-                                ? 'bg-red-100 text-red-800'
-                                : record.status === 'Pending Review'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                            title="Click to edit status"
-                          >
-                            {record.status || 'Click to edit'}
+                          <div className="flex items-center gap-2">
+                            <div
+                              onClick={() => setEditingStatus(prev => ({ ...prev, [index]: record.status || '' }))}
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-100 transition-colors duration-150 ${
+                                record.status === 'Good' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : record.status === 'Low interest'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : record.status === 'High interest'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : record.status === 'Title issue'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                              title="Click to edit status"
+                            >
+                              {record.status || 'Click to edit'}
+                            </div>
+                            {record.originalPdfPath && (
+                              <div className="w-2 h-2 bg-green-500 rounded-full" title="PDF available for execution"></div>
+                            )}
                           </div>
                         )}
                       </td>
@@ -599,7 +782,7 @@ export default function Dashboard() {
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                         <span className="font-medium">{getStateAbbreviation(record.state)}</span>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{record.county}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{formatCounty(record.county)}</td>
                       <td className="px-3 py-2 text-sm text-gray-900">
                         <div 
                           className="max-w-64 leading-relaxed"
@@ -635,8 +818,11 @@ export default function Dashboard() {
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-mono">{record.decimalInterest}</td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{record.effectiveDate}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-mono">{formatDecimalInterest(record.decimalInterest)}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{formatDate(record.effectiveDate)}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        {record.dateScannedIn ? formatDate(record.dateScannedIn) : 'Not available'}
+                      </td>
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                         {editingNotes[index] !== undefined ? (
                           <input
@@ -659,6 +845,27 @@ export default function Dashboard() {
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center space-x-2">
+                          {/* Show Execute button only if PDF path exists */}
+                          {record.originalPdfPath ? (
+                            executingIndex === index ? (
+                              <div className="animate-spin h-4 w-4 text-green-600"></div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  console.log('Executing record with PDF:', record.originalPdfPath);
+                                  handleExecute(record, index);
+                                }}
+                                className="text-green-600 hover:text-green-900"
+                                title="Execute - Go to sign page with PDF"
+                              >
+                                <FiPlay className="h-4 w-4" />
+                              </button>
+                            )
+                          ) : (
+                            <span className="text-xs text-gray-400" title="No PDF file available for this record">
+                              No PDF
+                            </span>
+                          )}
                           {deleteConfirmIndex === index ? (
                             <>
                               <button
