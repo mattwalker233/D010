@@ -41,8 +41,36 @@ if os.name == 'nt':  # Windows
 else:
     # Linux/Unix - try to find tesseract in PATH
     try:
-        version = pytesseract.get_tesseract_version()
-        print(f"Tesseract version: {version}")
+        # Try multiple common Linux Tesseract paths
+        possible_paths = [
+            "/usr/bin/tesseract",
+            "/usr/local/bin/tesseract",
+            "/opt/homebrew/bin/tesseract"
+        ]
+        
+        tesseract_found = False
+        for path in possible_paths:
+            if os.path.exists(path):
+                pytesseract.pytesseract.tesseract_cmd = path
+                try:
+                    version = pytesseract.get_tesseract_version()
+                    print(f"Tesseract version: {version} found at {path}")
+                    tesseract_found = True
+                    break
+                except:
+                    continue
+        
+        if not tesseract_found:
+            # Try PATH
+            try:
+                version = pytesseract.get_tesseract_version()
+                print(f"Tesseract version: {version} found in PATH")
+            except Exception as e:
+                print(f"Error initializing Tesseract: {str(e)}")
+                if os.getenv("ENVIRONMENT") == "production":
+                    print("Running in production mode - Tesseract OCR disabled")
+                else:
+                    print("Tesseract not found in PATH")
     except Exception as e:
         print(f"Error initializing Tesseract: {str(e)}")
         if os.getenv("ENVIRONMENT") == "production":
