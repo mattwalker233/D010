@@ -8,4 +8,8 @@ anthropic==0.50.0
 python-dotenv==1.0.0
 PyMuPDF==1.23.8
 sqlalchemy==2.0.27
-psycopg2-binary==2.9.9 
+psycopg2-binary==2.9.9
+# Production database options
+asyncpg==0.29.0
+# For Railway deployment
+gunicorn==21.2.0 

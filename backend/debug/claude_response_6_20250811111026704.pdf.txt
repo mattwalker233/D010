@@ -1,0 +1,22 @@
+```json
+{
+    "operator": "Ovintiv USA Inc.",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "OK",
+    "effectiveDate": "July 28, 2025",
+    "wells": [
+        {
+            "propertyName": "EULA MAE 0305 20H-23X",
+            "propertyDescription": "SEC 23-3N-5W; SEC 26-3N-5W",
+            "decimalInterest": "0.0001648385",
+            "county": "Grady"
+        },
+        {
+            "propertyName": "EULA MAE 0305 30H-23X",
+            "propertyDescription": "SEC 23-3N-5W; SEC 26-3N-5W",
+            "decimalInterest": "0.0001642068",
+            "county": "Grady"
+        }
+    ]
+}
+```

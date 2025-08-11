@@ -1,0 +1,38 @@
+{
+  "operator": "DE Central Operating LLC",
+  "entity": "AR MIDLAND LP",
+  "state": "Texas",
+  "effectiveDate": "First Sales",
+  "wells": [
+    {
+      "propertyName": "KILLER BEE I 8-44 4209H",
+      "propertyDescription": "SE/4 Section 8, Block B, Mrs. B Payton Survey, A-957, W/2NE/4 Section 8, Block B, Mrs. Nalda Antilley Survey, A-968, E/2NE/4 Section 8, Block B, Mrs. Thelma Beam Survey, A-969, E/2 Section 5, Block B, L&SV RR Co Survey, A-285, and E/2 Section 44, Block 36, JF Black Survey, A-40",
+      "decimalInterest": "0.00053302",
+      "county": "Reagan"
+    },
+    {
+      "propertyName": "KILLER BEE J 8-44 4310H",
+      "propertyDescription": "SE/4 Section 8, Block B, Mrs. B Payton Survey, A-957, W/2NE/4 Section 8, Block B, Mrs. Nalda Antilley Survey, A-968, E/2NE/4 Section 8, Block B, Mrs. Thelma Beam Survey, A-969, E/2 Section 5, Block B, L&SV RR Co Survey, A-285, and E/2 Section 44, Block 36, JF Black Survey, A-40",
+      "decimalInterest": "0.00053637",
+      "county": "Reagan"
+    },
+    {
+      "propertyName": "KILLER BEE M 8-44 4213H",
+      "propertyDescription": "SE/4 Section 8, Block B, Mrs. B Payton Survey, A-957, W/2NE/4 Section 8, Block B, Mrs. Nalda Antilley Survey, A-968, E/2NE/4 Section 8, Block B, Mrs. Thelma Beam Survey, A-969, E/2 Section 5, Block B, L&SV RR Co Survey, A-285, and E/2 Section 44, Block 36, JF Black Survey, A-40",
+      "decimalInterest": "0.00052328",
+      "county": "Reagan"
+    },
+    {
+      "propertyName": "KILLER BEE N 8-44 4314H",
+      "propertyDescription": "SE/4 Section 8, Block B, Mrs. B Payton Survey, A-957, W/2NE/4 Section 8, Block B, Mrs. Nalda Antilley Survey, A-968, E/2NE/4 Section 8, Block B, Mrs. Thelma Beam Survey, A-969, E/2 Section 5, Block B, L&SV RR Co Survey, A-285, and E/2 Section 44, Block 36, JF Black Survey, A-40",
+      "decimalInterest": "0.00056221",
+      "county": "Reagan"
+    },
+    {
+      "propertyName": "KILLER BEE K 8-44 4411H",
+      "propertyDescription": "SE/4 Section 8, Block B, Mrs. B Payton Survey, A-957, W/2NE/4 Section 8, Block B, Mrs. Nalda Antilley Survey, A-968, E/2NE/4 Section 8, Block B, Mrs. Thelma Beam Survey, A-969, E/2 Section 5, Block B, L&SV RR Co Survey, A-285, and E/2 Section 44, Block 36, JF Black Survey, A-40",
+      "decimalInterest": "0.00051622",
+      "county": "Reagan"
+    }
+  ]
+}

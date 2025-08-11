@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { DivisionOrder } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
+    const { id } = await params;
     const data = await request.json() as Partial<DivisionOrder>;
     const db = await getDb();
 

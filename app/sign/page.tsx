@@ -25,7 +25,7 @@ interface SignaturePosition {
   page: number;
 }
 
-function SignPage() {
+function SignPageContent() {
   const [file, setFile] = useState<File | null>(null);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
@@ -65,7 +65,7 @@ function SignPage() {
       console.log('Loading PDF from backend:', filename);
       
       // Fetch the PDF from the backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/pdf/${encodeURIComponent(filename)}`);
+      const response = await fetch(`http://localhost:8000/api/pdf/${encodeURIComponent(filename)}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -109,7 +109,7 @@ function SignPage() {
   useEffect(() => {
     async function fetchEntities() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/entities`);
+        const response = await fetch('/api/entities');
         if (!response.ok) throw new Error('Failed to fetch entities');
         const data = await response.json();
         setEntities(data);
@@ -221,13 +221,7 @@ function SignPage() {
 
   // PDF load error handler
   const onDocumentLoadError = (error: any) => {
-    // Suppress blob URL errors since the functionality works correctly
-    const errorMessage = error?.message || '';
-    if (errorMessage.includes('blob:') && errorMessage.includes('Unexpected server response (0)')) {
-      console.log('Suppressed blob URL error - PDF functionality working correctly');
-      return;
-    }
-    setPdfError(errorMessage || 'Failed to load PDF file.');
+    setPdfError(error?.message || 'Failed to load PDF file.');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,7 +264,7 @@ function SignPage() {
       // Add sticker placement option
       formData.append('placeStickerOnEveryPage', placeStickerOnEveryPage.toString());
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/sign-pdf`, {
+      const response = await fetch('/api/sign-pdf', {
         method: 'POST',
         body: formData,
       });
@@ -372,7 +366,7 @@ function SignPage() {
       console.log(`Visual rotation: ${rotation}°, sending actual rotation: ${actualRotation}° to backend`);
 
       console.log('Sending rotation request to backend...');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/rotate-pdf`, {
+      const response = await fetch('/api/rotate-pdf', {
         method: 'POST',
         body: formData,
       });
@@ -714,12 +708,10 @@ function SignPage() {
   );
 }
 
-function SignPageWrapper() {
+export default function SignPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <SignPage />
+      <SignPageContent />
     </Suspense>
   );
-}
-
-export default SignPageWrapper; 
+} 

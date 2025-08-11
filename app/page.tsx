@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiUpload, FiFile, FiCheck, FiX, FiEdit2, FiSave, FiDatabase, FiPlay } from 'react-icons/fi';
+import { FiUpload, FiFile, FiCheck, FiX, FiEdit2, FiSave, FiDatabase, FiPlay, FiInfo } from 'react-icons/fi';
 
 interface Well {
   propertyName: string;
@@ -39,7 +39,7 @@ export default function Home() {
       // Add new files to selected files, avoiding duplicates
       const newFiles = acceptedFiles.filter(newFile => 
         !selectedFiles.some(existingFile => 
-          existingFile.name === newFile.name && existingFile.size === newFile.size
+          newFile.name === existingFile.name && newFile.size === existingFile.size
         )
       );
       
@@ -64,54 +64,50 @@ export default function Home() {
 
     const results: DivisionOrder[] = [];
 
-    // Process files sequentially using the original successful method
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
+    try {
+      console.log(`=== Processing ${selectedFiles.length} files ===`);
       
-      try {
-        console.log(`Processing file ${i + 1}/${selectedFiles.length}: ${file.name}`);
-        
-        const formData = new FormData();
-        formData.append('file', file);
+      // Create FormData with all files
+      const formData = new FormData();
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/upload`, {
-          method: 'POST',
-          body: formData,
-        });
+      // Send all files to backend for processing
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/upload-multiple`, {
+        method: 'POST',
+        body: formData,
+      });
 
-        if (!response.ok) {
-          throw new Error(`Failed to process ${file.name}`);
-        }
+      const responseData = await response.json();
 
-        const data = await response.json();
-        
-        console.log(`Backend response for ${file.name}:`, data);
-        console.log(`Original PDF path from backend:`, data.original_pdf_path);
-        
-        if (!data.success || !data.data) {
-          throw new Error(`No data extracted from ${file.name}`);
-        }
-
-        // Create the order object
-        const order: DivisionOrder = {
-          ...data.data,
-          id: `result-${Date.now()}-${i}`,
-          originalPdfPath: data.original_pdf_path
-        };
-
-        console.log(`Created order for ${file.name}:`, order);
-        console.log(`PDF path in order: ${order.originalPdfPath}`);
-        console.log(`Order type check:`, typeof order.originalPdfPath, order.originalPdfPath === null, order.originalPdfPath === undefined);
-
-        results.push(order);
-        console.log(`Successfully processed ${file.name}`);
-
-      } catch (err) {
-        console.error(`Error processing ${file.name}:`, err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to process file';
-        setError(`Error processing ${file.name}: ${errorMessage}`);
-        // Continue processing other files even if one fails
+      if (!response.ok) {
+        throw new Error(responseData.error || responseData.details || 'Failed to process PDFs');
       }
+
+      if (!responseData.success || !responseData.results) {
+        throw new Error('No results received from server');
+      }
+
+      console.log('Processing results:', responseData);
+
+      // Process results from multiple upload
+      responseData.results.forEach((result: any, index: number) => {
+        if (result.success && result.data) {
+          // Create the order object
+          const order: DivisionOrder = {
+            ...result.data,
+            id: `result-${Date.now()}-${index}`,
+            originalPdfPath: result.original_pdf_path
+          };
+          results.push(order);
+        }
+      });
+
+    } catch (err) {
+      console.error('Error processing files:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process files';
+      setError(`Error processing files: ${errorMessage}`);
     }
 
     if (results.length > 0) {
@@ -277,83 +273,136 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-4">
             Division Order Processor
           </h1>
-          <div className="flex gap-4">
-            <Link
-              href="/dashboard"
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-            >
-              <FiDatabase className="mr-2" />
-              View Dashboard
-            </Link>
-          </div>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Upload and process division order PDFs with AI-powered extraction. Review, edit, and deploy to your dashboard seamlessly.
+          </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-              ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+        {/* Navigation Links */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <Link
+            href="/dashboard"
+            className="flex items-center justify-center px-6 py-3 bg-white text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-200 shadow-lg hover:shadow-xl border border-slate-200"
           >
-            <input {...getInputProps()} />
-            <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-2 text-sm text-gray-600">
-              {isDragActive
-                ? "Drop PDF files here"
-                : "Drag and drop PDF files here, or click to select"}
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              Supports single or multiple files
+            <FiDatabase className="mr-2" />
+            View Dashboard
+          </Link>
+        </div>
+
+        {/* Main Upload Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+              Upload Division Orders
+            </h2>
+            <p className="text-slate-600">
+              Process single or multiple PDF files with efficient batch processing. Perfect for both individual files and bulk operations.
             </p>
           </div>
 
+          {/* Enhanced Drop Zone */}
+          <div
+            {...getRootProps()}
+            className={`
+              border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer
+              transition-all duration-300
+              ${isDragActive 
+                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 scale-105 shadow-lg' 
+                : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
+              }
+            `}
+          >
+            <input {...getInputProps()} />
+            
+            <div className="space-y-4">
+              <div className={`
+                w-20 h-20 mx-auto rounded-full flex items-center justify-center transition-all duration-300
+                ${isDragActive 
+                  ? 'bg-blue-100 text-blue-600 scale-110' 
+                  : 'bg-slate-100 text-slate-400'
+                }
+              `}>
+                <FiUpload className="h-10 w-10" />
+              </div>
+              <div className="space-y-2">
+                <div className="text-xl font-semibold text-slate-700">
+                  {isDragActive ? "Drop your PDFs here" : "Drag & drop PDF files here"}
+                </div>
+                <p className="text-slate-500">
+                  or click to browse and select files
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mt-3">
+                  <FiInfo className="h-4 w-4" />
+                  <span>Supports single or multiple files with efficient batch processing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Selected Files Section */}
           {selectedFiles.length > 0 && (
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Selected Files ({selectedFiles.length})</h3>
-                <div className="flex gap-2">
+            <div className="mt-8 space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FiFile className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    Selected Files ({selectedFiles.length})
+                  </h3>
+                </div>
+                <div className="flex gap-3">
                   <button
                     onClick={handleProcessFiles}
                     disabled={isLoading || selectedFiles.length === 0}
-                    className={`flex items-center px-4 py-2 rounded-lg text-white font-medium
+                    className={`
+                      flex items-center px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg
                       ${!selectedFiles.length || isLoading
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
+                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl transform hover:-translate-y-0.5'
+                      }
+                    `}
                   >
                     <FiPlay className="mr-2" />
-                    {isLoading ? 'Processing...' : 'Process All Files'}
+                    {isLoading ? 'Processing...' : 'Process Files'}
                   </button>
                   <button
                     onClick={handleClear}
                     disabled={isLoading}
-                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    className="flex items-center px-4 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all duration-200"
                   >
                     <FiX className="mr-2" />
-                    Clear All
+                    Clear
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              {/* File List */}
+              <div className="grid gap-3">
                 {selectedFiles.map((file, index) => (
-                  <div key={`${file.name}-${index}`} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                    <div className="flex items-center">
-                      <FiFile className="h-5 w-5 text-gray-400 mr-2" />
-                      <span className="text-sm text-gray-600">{file.name}</span>
-                      <span className="text-xs text-gray-400 ml-2">
-                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
+                  <div key={`${file.name}-${index}`} className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50 p-4 rounded-xl border border-slate-200">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FiFile className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">{file.name}</p>
+                        <p className="text-sm text-slate-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
                     </div>
                     <button
                       onClick={() => removeFile(index)}
                       disabled={isLoading}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors duration-200"
                     >
                       <FiX className="h-5 w-5" />
                     </button>
@@ -364,32 +413,47 @@ export default function Home() {
           )}
         </div>
 
+        {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-8 flex items-center">
-            <FiX className="h-5 w-5 mr-2" />
-            {error}
+          <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-8 flex items-center shadow-lg">
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-4">
+              <FiX className="h-5 w-5 text-red-600" />
+            </div>
+            <div>
+              <p className="font-medium">Processing Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
           </div>
         )}
 
+        {/* Results Section */}
         {results.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Processed Orders ({results.length})
-              </h2>
-              <div className="flex gap-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <FiCheck className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    Processed Orders ({results.length})
+                  </h2>
+                  <p className="text-slate-600">Review and edit the extracted information before deployment</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
                 {isEditing ? (
                   <>
                     <button
                       onClick={handleSave}
-                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      className="flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                     >
                       <FiSave className="mr-2" />
-                      Save
+                      Save Changes
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                      className="flex items-center px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all duration-200"
                     >
                       <FiX className="mr-2" />
                       Cancel
@@ -399,19 +463,21 @@ export default function Home() {
                   <>
                     <button
                       onClick={handleEdit}
-                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                     >
                       <FiEdit2 className="mr-2" />
-                      Edit
+                      Edit Orders
                     </button>
                     <button
                       onClick={handleDeploy}
                       disabled={isEditing || isDeploying}
-                      className={`flex items-center px-4 py-2 rounded-lg ${
-                        isEditing || isDeploying
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-green-600 hover:bg-green-700'
-                      } text-white`}
+                      className={`
+                        flex items-center px-6 py-3 rounded-xl transition-all duration-200 shadow-lg
+                        ${isEditing || isDeploying
+                          ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 hover:shadow-xl transform hover:-translate-y-0.5'
+                        }
+                      `}
                     >
                       <FiDatabase className="mr-2" />
                       {isDeploying ? 'Deploying...' : 'Deploy to Dashboard'}
@@ -421,136 +487,165 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Orders Display */}
             <div className="space-y-8">
               {(isEditing ? editedResults : results).map((result, resultIndex) => (
-                <div key={result.id || resultIndex} className="border rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                    Order {resultIndex + 1}: {result.operator} - {result.entity}
-                  </h3>
+                <div key={result.id || resultIndex} className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-6 border border-slate-200">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-600">{resultIndex + 1}</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-800">
+                      {result.operator} - {result.entity}
+                    </h3>
+                  </div>
                   
                   <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-md font-semibold text-gray-700 mb-2">Division Order Details</h4>
-                        <div className="space-y-2">
+                    {/* Division Order Details */}
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      <div className="bg-white rounded-xl p-5 border border-slate-200">
+                        <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          Division Order Details
+                        </h4>
+                        <div className="space-y-4">
                           {isEditing ? (
                             <>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700">Operator</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Operator</label>
                                 <input
                                   type="text"
                                   value={editedResults[resultIndex]?.operator || ''}
                                   onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'operator', e.target.value)}
-                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700">Entity</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Entity</label>
                                 <input
                                   type="text"
                                   value={editedResults[resultIndex]?.entity || ''}
                                   onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'entity', e.target.value)}
-                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700">State</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">State</label>
                                 <input
                                   type="text"
                                   value={editedResults[resultIndex]?.state || ''}
                                   onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'state', e.target.value)}
-                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700">Effective Date</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Effective Date</label>
                                 <input
                                   type="text"
                                   value={editedResults[resultIndex]?.effectiveDate || ''}
                                   onChange={(e) => handleFieldChange(resultIndex, 'divisionOrder', 'effectiveDate', e.target.value)}
-                                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                 />
                               </div>
                             </>
                           ) : (
-                            <>
-                              <p><span className="font-medium">Operator:</span> {result.operator}</p>
-                              <p><span className="font-medium">Entity:</span> {result.entity}</p>
-                              <p><span className="font-medium">State:</span> {result.state}</p>
-                              <p><span className="font-medium">Effective Date:</span> {result.effectiveDate}</p>
-                            </>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-slate-50 rounded-lg p-3">
+                                <p className="text-sm text-slate-500">Operator</p>
+                                <p className="font-medium text-slate-800">{result.operator}</p>
+                              </div>
+                              <div className="bg-slate-50 rounded-lg p-3">
+                                <p className="text-sm text-slate-500">Entity</p>
+                                <p className="font-medium text-slate-800">{result.entity}</p>
+                              </div>
+                              <div className="bg-slate-50 rounded-lg p-3">
+                                <p className="text-sm text-slate-500">State</p>
+                                <p className="font-medium text-slate-800">{result.state}</p>
+                              </div>
+                              <div className="bg-slate-50 rounded-lg p-3">
+                                <p className="text-sm text-slate-500">Effective Date</p>
+                                <p className="font-medium text-slate-800">{result.effectiveDate}</p>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <h4 className="text-md font-semibold text-gray-700 mb-4">Wells ({result.wells.length})</h4>
-                      <div className="space-y-4">
-                        {(isEditing ? editedResults[resultIndex]?.wells : result.wells)?.map((well, wellIndex) => (
-                          <div key={wellIndex} className="border rounded-lg p-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
+                      {/* Wells Section */}
+                      <div className="bg-white rounded-xl p-5 border border-slate-200">
+                        <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Wells ({result.wells.length})
+                        </h4>
+                        <div className="space-y-4 max-h-80 overflow-y-auto">
+                          {(isEditing ? editedResults[resultIndex]?.wells : result.wells)?.map((well, wellIndex) => (
+                            <div key={wellIndex} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                              <div className="grid grid-cols-1 gap-4">
                                 {isEditing ? (
                                   <>
-                                    <div className="mb-2">
-                                      <label className="block text-sm font-medium text-gray-700">Property Name</label>
+                                    <div>
+                                      <label className="block text-sm font-medium text-slate-700 mb-2">Property Name</label>
                                       <input
                                         type="text"
                                         value={editedResults[resultIndex]?.wells[wellIndex]?.propertyName || ''}
                                         onChange={(e) => handleFieldChange(resultIndex, 'wells', 'propertyName', e.target.value, wellIndex)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                       />
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-medium text-gray-700">Property Description</label>
+                                      <label className="block text-sm font-medium text-slate-700 mb-2">Property Description</label>
                                       <input
                                         type="text"
                                         value={editedResults[resultIndex]?.wells[wellIndex]?.propertyDescription || ''}
                                         onChange={(e) => handleFieldChange(resultIndex, 'wells', 'propertyDescription', e.target.value, wellIndex)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                       />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">Decimal Interest</label>
+                                        <input
+                                          type="text"
+                                          value={editedResults[resultIndex]?.wells[wellIndex]?.decimalInterest || ''}
+                                          onChange={(e) => handleFieldChange(resultIndex, 'wells', 'decimalInterest', e.target.value, wellIndex)}
+                                          className="w-full px-3 py-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-2">County</label>
+                                        <input
+                                          type="text"
+                                          value={editedResults[resultIndex]?.wells[wellIndex]?.county || ''}
+                                          onChange={(e) => handleFieldChange(resultIndex, 'wells', 'county', e.target.value, wellIndex)}
+                                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                                        />
+                                      </div>
                                     </div>
                                   </>
                                 ) : (
-                                  <>
-                                    <p><span className="font-medium">Property Name:</span> {well.propertyName}</p>
-                                    <p><span className="font-medium">Property Description:</span> {well.propertyDescription}</p>
-                                  </>
-                                )}
-                              </div>
-                              <div>
-                                {isEditing ? (
-                                  <>
-                                    <div className="mb-2">
-                                      <label className="block text-sm font-medium text-gray-700">Decimal Interest</label>
-                                      <input
-                                        type="text"
-                                        value={editedResults[resultIndex]?.wells[wellIndex]?.decimalInterest || ''}
-                                        onChange={(e) => handleFieldChange(resultIndex, 'wells', 'decimalInterest', e.target.value, wellIndex)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                      />
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <p className="text-sm text-slate-500">Property Name</p>
+                                      <p className="font-medium text-slate-800">{well.propertyName}</p>
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-medium text-gray-700">County</label>
-                                      <input
-                                        type="text"
-                                        value={editedResults[resultIndex]?.wells[wellIndex]?.county || ''}
-                                        onChange={(e) => handleFieldChange(resultIndex, 'wells', 'county', e.target.value, wellIndex)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                      />
+                                      <p className="text-sm text-slate-500">Property Description</p>
+                                      <p className="font-medium text-slate-800">{well.propertyDescription}</p>
                                     </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <p><span className="font-medium">Decimal Interest:</span> {well.decimalInterest}</p>
-                                    <p><span className="font-medium">County:</span> {well.county}</p>
-                                  </>
+                                    <div>
+                                      <p className="text-sm text-slate-500">Decimal Interest</p>
+                                      <p className="font-medium text-slate-800">{well.decimalInterest}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-slate-500">County</p>
+                                      <p className="font-medium text-slate-800">{well.county}</p>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

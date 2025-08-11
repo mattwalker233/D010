@@ -18,28 +18,56 @@ import re
 from PIL import ImageOps
 from fastapi.responses import Response
 
-# Set Tesseract path
-try:
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    # Verify Tesseract installation
-    version = pytesseract.get_tesseract_version()
-    print(f"Tesseract version: {version}")
-except Exception as e:
-    print(f"Error initializing Tesseract: {str(e)}")
-    print("Please ensure Tesseract is installed at: C:\\Program Files\\Tesseract-OCR\\tesseract.exe")
-    print("You can download it from: https://github.com/UB-Mannheim/tesseract/wiki")
-    raise Exception("Tesseract initialization failed. Please check installation.")
-
-# Load environment variables
+# Load environment variables first
 load_dotenv()
+
+# Set Tesseract path based on environment
+TESSERACT_PATH = os.getenv("TESSERACT_PATH", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+if os.name == 'nt':  # Windows
+    try:
+        pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+        # Verify Tesseract installation
+        version = pytesseract.get_tesseract_version()
+        print(f"Tesseract version: {version}")
+    except Exception as e:
+        print(f"Error initializing Tesseract: {str(e)}")
+        print(f"Tesseract path: {TESSERACT_PATH}")
+        print("For production deployment, set TESSERACT_PATH environment variable")
+        # Don't fail in production, just warn
+        if os.getenv("ENVIRONMENT") == "production":
+            print("Running in production mode - Tesseract OCR disabled")
+        else:
+            raise Exception("Tesseract initialization failed. Please check installation.")
+else:
+    # Linux/Unix - try to find tesseract in PATH
+    try:
+        version = pytesseract.get_tesseract_version()
+        print(f"Tesseract version: {version}")
+    except Exception as e:
+        print(f"Error initializing Tesseract: {str(e)}")
+        if os.getenv("ENVIRONMENT") == "production":
+            print("Running in production mode - Tesseract OCR disabled")
+        else:
+            print("Tesseract not found in PATH")
 
 # Initialize FastAPI app
 app = FastAPI()
 
+# Get allowed origins from environment or use defaults
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
+if os.getenv("VERCEL_URL"):
+    # Add Vercel preview URLs
+    ALLOWED_ORIGINS.append(f"https://{os.getenv('VERCEL_URL')}")
+if os.getenv("FRONTEND_URL"):
+    # Add custom frontend URL
+    ALLOWED_ORIGINS.append(os.getenv("FRONTEND_URL"))
+
+print(f"Allowed CORS origins: {ALLOWED_ORIGINS}")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -377,19 +405,42 @@ async def upload_file(file: UploadFile = File(...)):
             
             # Process with Claude
             print("Sending text to Claude for processing...")
+            
             try:
-                message = claude.messages.create(
-                    model="claude-3-7-sonnet-20250219",
-                    max_tokens=15000,  # Increased from 4000 to handle large documents
-                    temperature=0,
-                    system=system_prompt,
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": f"Please analyze this division order and extract the information:\n\n{text}"
-                        }
-                    ]
-                )
+                # Add retry logic for overloaded errors
+                max_retries = 3
+                retry_delay = 2  # seconds
+                
+                for attempt in range(max_retries):
+                    try:
+                        message = claude.messages.create(
+                            model="claude-3-7-sonnet-20250219",
+                            max_tokens=15000,  # Increased from 4000 to handle large documents
+                            temperature=0,
+                            system=system_prompt,
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": f"Please analyze this division order and extract the information:\n\n{text}"
+                                }
+                            ]
+                        )
+                        break  # Success, exit retry loop
+                        
+                    except Exception as claude_error:
+                        error_message = str(claude_error)
+                        if "overloaded" in error_message.lower() or "529" in error_message:
+                            if attempt < max_retries - 1:
+                                print(f"Claude API overloaded (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay} seconds...")
+                                import time
+                                time.sleep(retry_delay)
+                                retry_delay *= 2  # Exponential backoff
+                                continue
+                            else:
+                                print(f"Claude API overloaded after {max_retries} attempts, giving up")
+                        else:
+                            # Not an overload error, don't retry
+                            raise claude_error
                 
                 # Parse Claude's response
                 response_text = message.content[0].text
@@ -415,12 +466,15 @@ async def upload_file(file: UploadFile = File(...)):
                     json.dump(parsed_data, f, indent=2)
                 print(f"Saved parsed data to: {parsed_debug_path}")
                 
-                return {
+                response_data = {
                     "success": True,
                     "data": parsed_data,
                     "is_scanned": is_scanned,
                     "original_pdf_path": file.filename
                 }
+                print(f"Returning response with original_pdf_path: {file.filename}")
+                print(f"Full response: {json.dumps(response_data, indent=2)}")
+                return response_data
                 
             except Exception as claude_error:
                 print(f"Error in Claude processing: {str(claude_error)}")

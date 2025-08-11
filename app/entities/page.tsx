@@ -172,7 +172,15 @@ export default function EntitiesPage() {
                 className="mt-1 block w-full"
               />
               {newEntity.signature && (
-                <img src={newEntity.signature} alt="Signature Preview" className="mt-2 h-12" />
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-1">Signature Preview:</p>
+                  <img 
+                    src={newEntity.signature} 
+                    alt="Signature Preview" 
+                    className="max-w-full max-h-32 object-contain border border-gray-200 rounded"
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
+                </div>
               )}
             </div>
             <button
@@ -201,7 +209,12 @@ export default function EntitiesPage() {
               {entity.signature && (
                 <div className="mb-2">
                   <p className="text-gray-600 mb-1">Signature:</p>
-                  <img src={entity.signature} alt="Signature" className="h-12" />
+                  <img 
+                    src={entity.signature} 
+                    alt="Signature" 
+                    className="max-w-full max-h-24 object-contain border border-gray-200 rounded"
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
                 </div>
               )}
               <button

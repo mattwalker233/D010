@@ -270,32 +270,45 @@ export async function POST(request: Request) {
           const signatureImage = await pdfDoc.embedPng(signatureBytes);
           console.log(`Signature image embedded successfully`);
           
-          // Calculate signature size (standard size)
-          const signatureWidth = 120;
-          const signatureHeight = 50;
+          // Get original signature dimensions to preserve aspect ratio
+          const originalWidth = signatureImage.width;
+          const originalHeight = signatureImage.height;
+          
+          // Calculate signature size while preserving aspect ratio
+          // Use a reasonable base height and scale width proportionally
+          const baseHeight = 50;
+          const signatureHeight = baseHeight;
+          const signatureWidth = (originalWidth / originalHeight) * baseHeight;
+          
+          // Ensure signature isn't too wide (max 200 points)
+          const maxWidth = 200;
+          const finalSignatureWidth = Math.min(signatureWidth, maxWidth);
+          const finalSignatureHeight = finalSignatureWidth === signatureWidth ? signatureHeight : (finalSignatureWidth / signatureWidth) * signatureHeight;
           
           // Draw signature at the exact position clicked (centered on click point)
-          const signatureX = position.x - signatureWidth / 2;
-          const signatureY = position.y - signatureHeight / 2;
+          const signatureX = position.x - finalSignatureWidth / 2;
+          const signatureY = position.y - finalSignatureHeight / 2;
           
           console.log(`Page ${pageNum} dimensions: ${pageWidth}x${pageHeight}`);
           console.log(`Click position: (${position.x}, ${position.y})`);
-          console.log(`Signature size: ${signatureWidth}x${signatureHeight}`);
-          console.log(`Drawing signature at (${signatureX}, ${signatureY}) on page ${pageNum}`);
-          console.log(`Signature bounds: (${signatureX}, ${signatureY}) to (${signatureX + signatureWidth}, ${signatureY + signatureHeight})`);
+          console.log(`Original signature dimensions: ${originalWidth}x${originalHeight}`);
+          console.log(`Calculated signature size: ${signatureWidth.toFixed(1)}x${signatureHeight.toFixed(1)}`);
+          console.log(`Final signature size: ${finalSignatureWidth.toFixed(1)}x${finalSignatureHeight.toFixed(1)}`);
+          console.log(`Drawing signature at (${signatureX.toFixed(1)}, ${signatureY.toFixed(1)}) on page ${pageNum}`);
+          console.log(`Signature bounds: (${signatureX.toFixed(1)}, ${signatureY.toFixed(1)}) to (${(signatureX + finalSignatureWidth).toFixed(1)}, ${(signatureY + finalSignatureHeight).toFixed(1)})`);
           
           // Check if signature coordinates are within page bounds
           if (signatureX < 0 || signatureY < 0 || 
-              signatureX + signatureWidth > pageWidth || 
-              signatureY + signatureHeight > pageHeight) {
-            console.warn(`Signature may be outside page bounds: x=${signatureX}, y=${signatureY}, page=${pageWidth}x${pageHeight}`);
+              signatureX + finalSignatureWidth > pageWidth || 
+              signatureY + finalSignatureHeight > pageHeight) {
+            console.warn(`Signature may be outside page bounds: x=${signatureX.toFixed(1)}, y=${signatureY.toFixed(1)}, page=${pageWidth}x${pageHeight}`);
           }
           
           page.drawImage(signatureImage, {
             x: signatureX,
             y: signatureY,
-            width: signatureWidth,
-            height: signatureHeight,
+            width: finalSignatureWidth,
+            height: finalSignatureHeight,
           });
                     console.log(`Signature successfully drawn at position (${position.x}, ${position.y}) on page ${pageNum}`);
         } catch (err) {

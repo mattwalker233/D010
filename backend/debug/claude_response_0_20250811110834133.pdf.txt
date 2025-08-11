@@ -1,0 +1,16 @@
+```json
+{
+    "operator": "Validus Energy II Midcon LLC",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "OK",
+    "effectiveDate": "January 03, 2001",
+    "wells": [
+        {
+            "propertyName": "SMARTY JONES 32X5-10-4-2HB",
+            "propertyDescription": "10N 4W 29 ALL",
+            "decimalInterest": "0.00073151",
+            "county": "MCCLAIN"
+        }
+    ]
+}
+```

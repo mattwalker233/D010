@@ -1,0 +1,14 @@
+{
+  "operator": "BPX Operating Company",
+  "entity": "BLUE SKY MINERALS HOLDCO LLC DBA BLUE SKY MINERALS LP",
+  "state": "TEXAS",
+  "effectiveDate": "06/01/2025",
+  "wells": [
+    {
+      "propertyName": "ESCARPA 57-T1-39X34 YA X101H",
+      "propertyDescription": "478.23 AC OF SEC 34, BLK 57, T1",
+      "decimalInterest": "0.00140286",
+      "county": "REEVES"
+    }
+  ]
+}

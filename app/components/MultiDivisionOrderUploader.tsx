@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { FileUp, X, CheckCircle, AlertCircle, Upload, Trash2, Play } from 'lucide-react';
+import { FileUp, X, CheckCircle, AlertCircle, Upload, Trash2, Play, FileText, Clock, CheckSquare } from 'lucide-react';
 import { DivisionOrderPreview } from './DivisionOrderPreview';
 import type { DivisionOrder } from '@/lib/types';
 
@@ -79,7 +79,7 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
       })));
 
       // Send all files to backend for processing
-      const response = await fetch('http://localhost:8000/api/upload-multiple', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/upload-multiple`, {
         method: 'POST',
         body: formData,
       });
@@ -193,43 +193,67 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
   };
 
   return (
-    <div className="space-y-6">
-      {/* File Upload Area */}
+    <div className="space-y-8">
+      {/* Enhanced File Upload Area */}
       <div
         {...getRootProps()}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-          transition-colors duration-200
-          ${isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'}
+          border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer
+          transition-all duration-300
+          ${isDragActive 
+            ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 scale-105 shadow-xl' 
+            : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
+          }
         `}
       >
         <input {...getInputProps()} />
         
-        <div className="space-y-2">
-          <FileUp className="h-12 w-12 mx-auto text-muted-foreground" />
-          <div className="text-lg font-medium">
-            {isDragActive ? (
-              "Drop PDF files here"
-            ) : (
-              "Drag & drop division order PDFs here"
-            )}
+        <div className="space-y-4">
+          <div className={`
+            w-20 h-20 mx-auto rounded-full flex items-center justify-center transition-all duration-300
+            ${isDragActive 
+              ? 'bg-blue-100 text-blue-600 scale-110' 
+              : 'bg-slate-100 text-slate-400'
+            }
+          `}>
+            <FileUp className="h-10 w-10" />
           </div>
-          <p className="text-sm text-muted-foreground">
-            or click to select multiple files
-          </p>
+          <div className="space-y-2">
+            <div className="text-xl font-semibold text-slate-700">
+              {isDragActive ? (
+                "Drop your PDFs here"
+              ) : (
+                "Drag & drop division order PDFs here"
+              )}
+            </div>
+            <p className="text-slate-500">
+              or click to browse and select multiple files
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mt-3">
+              <FileText className="h-4 w-4" />
+              <span>Supports multiple PDF files</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Selected Files List */}
+      {/* Selected Files Section */}
       {selectedFiles.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Selected Files ({selectedFiles.length})</h3>
-            <div className="flex gap-2">
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800">
+                Selected Files ({selectedFiles.length})
+              </h3>
+            </div>
+            <div className="flex gap-3">
               <Button
                 onClick={handleProcessAll}
                 disabled={uploading || selectedFiles.length === 0}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 <Play className="h-4 w-4 mr-2" />
                 {uploading ? 'Processing...' : 'Process All Files'}
@@ -239,6 +263,7 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
                 size="sm"
                 onClick={handleClear}
                 disabled={uploading}
+                className="px-4 py-3 rounded-xl border-slate-200 hover:bg-slate-50 transition-all duration-200"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Clear All
@@ -246,17 +271,20 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
             </div>
           </div>
 
-          <div className="space-y-2">
+          {/* Enhanced File List */}
+          <div className="grid gap-3">
             {selectedFiles.map((file, index) => (
               <div
                 key={`${file.name}-${index}`}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50 p-4 rounded-xl border border-slate-200 hover:shadow-md transition-all duration-200"
               >
-                <div className="flex items-center gap-3">
-                  <FileUp className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-blue-600" />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="font-medium text-slate-800">{file.name}</p>
+                    <p className="text-sm text-slate-500">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -267,8 +295,9 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
                   size="icon"
                   onClick={() => removeFile(index)}
                   disabled={uploading}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
             ))}
@@ -276,40 +305,78 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
         </div>
       )}
 
-      {/* Processing Status */}
+      {/* Enhanced Processing Status */}
       {fileStatuses.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Processing Status</h3>
-          <div className="space-y-3">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
+              <Clock className="h-4 w-4 text-slate-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Processing Status</h3>
+          </div>
+          <div className="grid gap-4">
             {fileStatuses.map((fileStatus, index) => (
               <div
                 key={`${fileStatus.file.name}-${index}`}
-                className="border rounded-lg p-4 space-y-3"
+                className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(fileStatus.status)}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`
+                      w-10 h-10 rounded-xl flex items-center justify-center
+                      ${fileStatus.status === 'completed' ? 'bg-green-100' : 
+                        fileStatus.status === 'error' ? 'bg-red-100' : 
+                        fileStatus.status === 'processing' ? 'bg-blue-100' : 'bg-slate-100'
+                      }
+                    `}>
+                      {getStatusIcon(fileStatus.status)}
+                    </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{fileStatus.file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getStatusText(fileStatus.status)}
-                      </p>
+                      <p className="font-medium text-slate-800">{fileStatus.file.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`
+                          text-xs px-2 py-1 rounded-full font-medium
+                          ${fileStatus.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                            fileStatus.status === 'error' ? 'bg-red-100 text-red-700' : 
+                            fileStatus.status === 'processing' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                          }
+                        `}>
+                          {getStatusText(fileStatus.status)}
+                        </span>
+                        {fileStatus.status === 'processing' && (
+                          <span className="text-xs text-slate-500">{fileStatus.progress}%</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {fileStatus.status === 'processing' && (
-                  <Progress value={fileStatus.progress} />
+                  <div className="space-y-2">
+                    <Progress value={fileStatus.progress} className="h-2" />
+                    <p className="text-xs text-slate-500 text-center">Processing document...</p>
+                  </div>
                 )}
 
                 {fileStatus.status === 'error' && (
-                  <p className="text-sm text-red-600">{fileStatus.error}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm text-red-700 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      {fileStatus.error}
+                    </p>
+                  </div>
                 )}
 
                 {fileStatus.status === 'completed' && fileStatus.result && (
-                  <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                    <p className="text-sm text-green-700">
-                      Successfully processed: {fileStatus.result.operator} - {fileStatus.result.entity}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <CheckSquare className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        Successfully processed: {fileStatus.result.operator} - {fileStatus.result.entity}
+                      </span>
+                    </div>
+                    <p className="text-xs text-green-600 mt-1">
+                      {fileStatus.result.wells.length} well{fileStatus.result.wells.length !== 1 ? 's' : ''} extracted
                     </p>
                   </div>
                 )}
@@ -319,24 +386,34 @@ export function MultiDivisionOrderUploader({ onUploadComplete, onError }: MultiD
         </div>
       )}
 
-      {/* Processed Orders */}
+      {/* Enhanced Processed Orders */}
       {processedOrders.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Processed Orders ({processedOrders.length})</h3>
-          {processedOrders.map((order, index) => (
-            <DivisionOrderPreview
-              key={order.id}
-              order={order}
-              onUpdate={(updatedOrder) => {
-                const updatedOrders = [...processedOrders];
-                updatedOrders[index] = updatedOrder;
-                setProcessedOrders(updatedOrders);
-                if (onUploadComplete) {
-                  onUploadComplete(updatedOrders);
-                }
-              }}
-            />
-          ))}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">
+              Processed Orders ({processedOrders.length})
+            </h3>
+          </div>
+          <div className="grid gap-6">
+            {processedOrders.map((order, index) => (
+              <div key={order.id} className="bg-gradient-to-br from-slate-50 to-green-50 rounded-xl border border-slate-200">
+                <DivisionOrderPreview
+                  order={order}
+                  onUpdate={(updatedOrder) => {
+                    const updatedOrders = [...processedOrders];
+                    updatedOrders[index] = updatedOrder;
+                    setProcessedOrders(updatedOrders);
+                    if (onUploadComplete) {
+                      onUploadComplete(updatedOrders);
+                    }
+                  }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

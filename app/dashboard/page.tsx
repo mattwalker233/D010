@@ -204,7 +204,7 @@ export default function Dashboard() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard`);
+      const response = await fetch('http://localhost:8000/api/dashboard');
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
@@ -257,7 +257,7 @@ export default function Dashboard() {
       console.log('handleNotesBlur called with index:', index);
       console.log('Notes value:', editingNotes[index]);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/update`, {
+      const response = await fetch(`http://localhost:8000/api/dashboard/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +300,7 @@ export default function Dashboard() {
       console.log('handleStatusBlur called with index:', index);
       console.log('Status value:', editingStatus[index]);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/update`, {
+      const response = await fetch(`http://localhost:8000/api/dashboard/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -397,7 +397,7 @@ export default function Dashboard() {
         }
         
         console.log('Using fallback index:', fallbackIndex);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${fallbackIndex}`, {
+        const response = await fetch(`http://localhost:8000/api/dashboard/delete?index=${fallbackIndex}`, {
           method: 'DELETE',
         });
 
@@ -417,7 +417,7 @@ export default function Dashboard() {
       }
 
       console.log('Sending delete request with actual index:', actualIndex);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${actualIndex}`, {
+      const response = await fetch(`http://localhost:8000/api/dashboard/delete?index=${actualIndex}`, {
         method: 'DELETE',
       });
 
@@ -442,7 +442,7 @@ export default function Dashboard() {
   const handleDeduplicate = async () => {
     try {
       setError(null);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/deduplicate`, {
+      const response = await fetch('http://localhost:8000/api/dashboard/deduplicate', {
         method: 'POST',
       });
       
@@ -467,14 +467,14 @@ export default function Dashboard() {
       setError(null);
       
       // Try the new clear endpoint first
-      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/clear`, {
+      let response = await fetch('http://localhost:8000/api/dashboard/clear', {
         method: 'POST',
       });
 
       if (!response.ok) {
         // Fallback: use deploy endpoint with empty array
         console.log('Clear endpoint not available, using deploy fallback');
-        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/deploy`, {
+        response = await fetch('http://localhost:8000/api/deploy', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -602,8 +602,154 @@ export default function Dashboard() {
     }
   };
 
-  // Filter records based on search term
-  const filteredRecords = records.filter(record => {
+  // Normalize property name to handle common issues
+  const normalizePropertyName = (name: string): string => {
+    if (!name) return '';
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+      .trim();
+  };
+
+  // Group records by property name only to combine decimal interests
+  const groupRecordsByProperty = (records: DashboardRecord[]): DashboardRecord[] => {
+    console.log('=== STARTING GROUPING PROCESS ===');
+    console.log(`Total records to process: ${records.length}`);
+    
+    // First, let's see all the raw property names
+    console.log('=== ALL RAW PROPERTY NAMES ===');
+    records.forEach((record, index) => {
+      const normalized = normalizePropertyName(record.propertyName || '');
+      console.log(`${index}: Original="${record.propertyName}" -> Normalized="${normalized}" (length: ${record.propertyName?.length}, char codes: ${record.propertyName?.split('').map(c => c.charCodeAt(0)).join(',')})`);
+    });
+    
+    // First, group all records by property name
+    const propertyGroups = new Map<string, DashboardRecord[]>();
+    
+    records.forEach((record, index) => {
+      const originalName = record.propertyName || '';
+      // Use normalized property name as the key
+      const key = normalizePropertyName(originalName);
+      
+      console.log(`Record ${index}: Original="${originalName}" -> Normalized="${key}"`);
+      
+      if (!propertyGroups.has(key)) {
+        propertyGroups.set(key, []);
+        console.log(`  Created new group for "${key}"`);
+      } else {
+        console.log(`  Added to existing group for "${key}"`);
+      }
+      propertyGroups.get(key)!.push(record);
+    });
+    
+    // Debug: Log the grouping results
+    console.log('=== GROUPING RESULTS ===');
+    let totalGroupedRecords = 0;
+    propertyGroups.forEach((groupRecords, propertyName) => {
+      console.log(`Property: "${propertyName}" has ${groupRecords.length} records:`);
+      groupRecords.forEach((record, index) => {
+        console.log(`  ${index}: decimal="${record.decimalInterest}"`);
+      });
+      totalGroupedRecords += groupRecords.length;
+    });
+    console.log(`Total records in groups: ${totalGroupedRecords}`);
+    
+    // Now combine each group into a single record
+    const combinedRecords: DashboardRecord[] = [];
+    
+    propertyGroups.forEach((groupRecords, propertyName) => {
+      if (groupRecords.length === 0) return;
+      
+      console.log(`\nProcessing group for "${propertyName}" with ${groupRecords.length} records`);
+      
+      // Start with the first record as the base
+      const baseRecord = { ...groupRecords[0] };
+      
+      // Collect all decimal interests
+      const allDecimalInterests: string[] = [];
+      groupRecords.forEach((record, index) => {
+        if (record.decimalInterest && record.decimalInterest.trim()) {
+          allDecimalInterests.push(record.decimalInterest.trim());
+          console.log(`  Record ${index}: adding decimal "${record.decimalInterest.trim()}"`);
+        }
+      });
+      
+      // Combine all decimal interests with commas
+      if (allDecimalInterests.length > 0) {
+        baseRecord.decimalInterest = allDecimalInterests.join(', ');
+        console.log(`  Combined decimals: "${baseRecord.decimalInterest}"`);
+      }
+      
+      // Keep the most recent scan date
+      let mostRecentDate = baseRecord.dateScannedIn;
+      groupRecords.forEach(record => {
+        if (record.dateScannedIn && (!mostRecentDate || record.dateScannedIn > mostRecentDate)) {
+          mostRecentDate = record.dateScannedIn;
+        }
+      });
+      baseRecord.dateScannedIn = mostRecentDate;
+      
+      // Keep the first non-empty status
+      let finalStatus = baseRecord.status;
+      if (!finalStatus) {
+        for (const record of groupRecords) {
+          if (record.status) {
+            finalStatus = record.status;
+            break;
+          }
+        }
+      }
+      baseRecord.status = finalStatus;
+      
+      // Combine all notes
+      const allNotes: string[] = [];
+      groupRecords.forEach(record => {
+        if (record.notes && record.notes.trim()) {
+          allNotes.push(record.notes.trim());
+        }
+      });
+      if (allNotes.length > 0) {
+        baseRecord.notes = allNotes.join('; ');
+      }
+      
+      // Keep the first available PDF path
+      let pdfPath = baseRecord.originalPdfPath;
+      if (!pdfPath) {
+        for (const record of groupRecords) {
+          if (record.originalPdfPath) {
+            pdfPath = record.originalPdfPath;
+            break;
+          }
+        }
+      }
+      baseRecord.originalPdfPath = pdfPath;
+      
+      console.log(`Final combined record for "${propertyName}": "${baseRecord.decimalInterest}"`);
+      
+      combinedRecords.push(baseRecord);
+    });
+    
+    console.log('=== FINAL RESULTS ===');
+    console.log(`Original records: ${records.length}`);
+    console.log(`Grouped records: ${combinedRecords.length}`);
+    combinedRecords.forEach((record: DashboardRecord, index: number) => {
+      console.log(`${index}: "${record.propertyName}" (decimal: "${record.decimalInterest}")`);
+    });
+    
+    return combinedRecords;
+  };
+
+  // Group and then filter records based on search term
+  const groupedRecords = groupRecordsByProperty(records);
+  
+  // TEMPORARY: Let's also show the original records for comparison
+  console.log('=== COMPARISON: Original vs Grouped ===');
+  console.log('Original records:', records.length);
+  console.log('Grouped records:', groupedRecords.length);
+  
+  const filteredRecords = groupedRecords.filter((record: DashboardRecord) => {
     if (!searchTerm) return true;
     
     // Split search term into words
@@ -639,7 +785,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Division Orders Dashboard</h1>
-              <p className="text-gray-600 text-sm">Showing {records.length} of {totalRecords} records</p>
+              <p className="text-gray-600 text-sm">Showing {filteredRecords.length} of {groupedRecords.length} grouped records (from {totalRecords} total records)</p>
             </div>
             <div className="flex gap-3">
             <div className="relative">
