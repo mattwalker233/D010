@@ -53,6 +53,11 @@ else:
 # Initialize FastAPI app
 app = FastAPI()
 
+# Root endpoint for healthcheck
+@app.get("/")
+async def root():
+    return {"message": "Division Orderly Backend API", "status": "healthy"}
+
 # Get allowed origins from environment or use defaults
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
 if os.getenv("VERCEL_URL"):
