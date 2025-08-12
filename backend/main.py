@@ -87,7 +87,15 @@ async def root():
     return {"message": "Division Orderly Backend API", "status": "healthy"}
 
 # Get allowed origins from environment or use defaults
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
+ALLOWED_ORIGINS = []
+if os.getenv("ALLOWED_ORIGINS"):
+    # Handle single URL or comma-separated URLs
+    origins = os.getenv("ALLOWED_ORIGINS").split(",")
+    ALLOWED_ORIGINS.extend([origin.strip() for origin in origins])
+else:
+    # Default origins for development
+    ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
+
 if os.getenv("VERCEL_URL"):
     # Add Vercel preview URLs
     ALLOWED_ORIGINS.append(f"https://{os.getenv('VERCEL_URL')}")
