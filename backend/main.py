@@ -104,6 +104,8 @@ if os.getenv("FRONTEND_URL"):
     ALLOWED_ORIGINS.append(os.getenv("FRONTEND_URL"))
 
 print(f"Allowed CORS origins: {ALLOWED_ORIGINS}")
+print(f"Frontend URL: {os.getenv('FRONTEND_URL')}")
+print(f"ALLOWED_ORIGINS env var: {os.getenv('ALLOWED_ORIGINS')}")
 
 # Add CORS middleware
 app.add_middleware(
