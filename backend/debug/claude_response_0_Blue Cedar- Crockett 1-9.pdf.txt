@@ -1,0 +1,16 @@
+```json
+{
+    "operator": "BLUE CEDAR ENERGY LLC",
+    "entity": "BLUE SKY MINERALS, LP",
+    "state": "OK",
+    "effectiveDate": "3/01/24",
+    "wells": [
+        {
+            "propertyName": "CROCKETT 1-9",
+            "propertyDescription": "SEC. 009-007N-004W",
+            "decimalInterest": "0.00865885",
+            "county": "MCCLAIN"
+        }
+    ]
+}
+```

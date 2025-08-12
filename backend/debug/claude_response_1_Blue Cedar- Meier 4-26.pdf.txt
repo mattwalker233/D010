@@ -1,0 +1,16 @@
+```json
+{
+    "operator": "BLUE CEDAR ENERGY LLC",
+    "entity": "BLUE SKY MINERALS, LP",
+    "state": "OK",
+    "effectiveDate": "3/01/24",
+    "wells": [
+        {
+            "propertyName": "MEIER 4-26",
+            "propertyDescription": "SEC. 026-01 7N-011W",
+            "decimalInterest": "0.01041667",
+            "county": "BLAINE"
+        }
+    ]
+}
+```

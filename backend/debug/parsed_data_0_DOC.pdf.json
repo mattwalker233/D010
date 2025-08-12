@@ -1,0 +1,26 @@
+{
+  "operator": "DEVON ENERGY PRODUCTION CO, LP",
+  "entity": "ALLDALE MINERALS LP",
+  "state": "OKLAHOMA",
+  "effectiveDate": "10/1/2024",
+  "wells": [
+    {
+      "propertyName": "LONDYN 9_4-14N-11W2HX",
+      "propertyDescription": "Secs. 9&4-14N-11W Allocs. Sec.9-49.47% Sec.4-50.53%",
+      "decimalInterest": "0.00579727",
+      "county": "BLAINE"
+    },
+    {
+      "propertyName": "LONDYN 9_4-14N-11W4HX",
+      "propertyDescription": "Secs. 9&4-14N-11W Allocs. Sec.9-50.08% Sec.4-49.92%",
+      "decimalInterest": "0.00586875",
+      "county": "BLAINE"
+    },
+    {
+      "propertyName": "LONDYN 9_4-14N-11W5HX",
+      "propertyDescription": "Secs. 9&4-14N-11W Allocs. Sec.9-49.95% Sec.4-50.05%",
+      "decimalInterest": "0.00585352",
+      "county": "BLAINE"
+    }
+  ]
+}

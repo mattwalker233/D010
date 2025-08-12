@@ -46,7 +46,7 @@ export function DivisionOrderUploader({ onUploadComplete, onError }: DivisionOrd
 
       setUploadProgress(20);
       console.log('Making request to /api/upload...');
-      const response = await fetch('http://localhost:8000/api/upload', {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/upload`, {
         method: 'POST',
         body: formData,
       });

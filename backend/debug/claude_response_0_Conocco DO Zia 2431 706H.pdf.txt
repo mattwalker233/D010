@@ -1,0 +1,22 @@
+```json
+{
+    "operator": "CONOCOPHILLIPS COMPANY",
+    "entity": "ALLDALE MINERALS III LP",
+    "state": "NEW MEXICO",
+    "effectiveDate": "3/1/25",
+    "wells": [
+        {
+            "propertyName": "ZIA HILLS 2431 706H TR 8",
+            "propertyDescription": "722.0 ACRES OF LAND, MORE OR LESS, BEING THE N/2NW/4 OF SECTION 17: AND ALL OF SECTION 18, T26S, R32E, LEA COUNTY, NEW MEXICO",
+            "decimalInterest": "01900000",
+            "county": "LEA"
+        },
+        {
+            "propertyName": "ZIA HILLS 2431 706H TR 9",
+            "propertyDescription": "722.0 ACRES OF LAND, MORE OR LESS, BEING THE N/2NW/4 OF SECTION 17: AND ALL OF SECTION 18, T26S, R32E, LEA COUNTY, NEW MEXICO",
+            "decimalInterest": "01900000",
+            "county": "LEA"
+        }
+    ]
+}
+```

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiFile, FiRefreshCw, FiTrash2, FiDownload, FiPlay } from 'react-icons/fi';
+import { FiFile, FiRefreshCw, FiTrash2, FiDownload } from 'react-icons/fi';
 import * as ExcelJS from 'exceljs';
 
 interface DashboardRecord {
@@ -183,52 +183,48 @@ const formatDecimalInterest = (decimalString: string): string => {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
   const [records, setRecords] = useState<DashboardRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalRecords, setTotalRecords] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingNotes, setEditingNotes] = useState<{ [key: number]: string }>({});
   const [editingStatus, setEditingStatus] = useState<{ [key: number]: string }>({});
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
   const [executingIndex, setExecutingIndex] = useState<number | null>(null);
-  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Status options
-  const statusOptions = ['Good', 'Low interest', 'High interest', 'Title issue'];
+  const statusOptions = ['Executed', 'Curative', 'Title issue', 'Pending Review'];
 
   const fetchDashboardData = async (page: number = 1) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await fetch('http://localhost:8000/api/dashboard');
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
+      console.log('Fetching dashboard data...');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard?page=${page}&page_size=150`);
+      console.log('Response status:', response.status);
       
       const data = await response.json();
-      console.log('Dashboard data received:', data);
+      console.log('Dashboard data:', data);
       
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch dashboard data');
       }
       
-      const allRecords = data.records || [];
-      console.log('All records:', allRecords);
-      console.log('Sample record structure:', allRecords[0]);
+      if (!data.records) {
+        throw new Error('No records found in response');
+      }
       
-      setTotalRecords(allRecords.length);
-      
-      // Simple pagination - show all records for now
-      setRecords(allRecords);
-      setTotalPages(1);
-      setCurrentPage(1);
+      setRecords(data.records);
+      setTotalPages(data.total_pages);
+      setTotalRecords(data.total);
+      setCurrentPage(data.page);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -257,16 +253,16 @@ export default function Dashboard() {
       console.log('handleNotesBlur called with index:', index);
       console.log('Notes value:', editingNotes[index]);
       
-      const response = await fetch(`http://localhost:8000/api/dashboard/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          index,
-          notes: editingNotes[index] || ''
-        }),
-      });
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            index,
+            notes: editingNotes[index] || ''
+          }),
+        });
 
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
@@ -300,16 +296,16 @@ export default function Dashboard() {
       console.log('handleStatusBlur called with index:', index);
       console.log('Status value:', editingStatus[index]);
       
-      const response = await fetch(`http://localhost:8000/api/dashboard/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          index,
-          status: editingStatus[index] || ''
-        }),
-      });
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            index,
+            status: editingStatus[index] || ''
+          }),
+        });
 
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
@@ -361,63 +357,23 @@ export default function Dashboard() {
       console.log('Record to delete:', recordToDelete);
 
       // Find the actual index in the original records array
-      // Use a more flexible matching approach
-      const actualIndex = records.findIndex(record => {
-        // Match on multiple fields to ensure we find the right record
-        const matchesProperty = record.propertyName === recordToDelete.propertyName;
-        const matchesOperator = record.operator === recordToDelete.operator;
-        const matchesEntity = record.entity === recordToDelete.entity;
-        const matchesEffectiveDate = record.effectiveDate === recordToDelete.effectiveDate;
-        const matchesCounty = record.county === recordToDelete.county;
-        
-        // Return true if most fields match (allowing for some minor differences)
-        return matchesProperty && matchesOperator && matchesEntity && 
-               matchesEffectiveDate && matchesCounty;
-      });
+      const actualIndex = records.findIndex(record => 
+        record.propertyName === recordToDelete.propertyName &&
+        record.effectiveDate === recordToDelete.effectiveDate &&
+        record.entity === recordToDelete.entity
+      );
 
       console.log('Actual index found:', actualIndex);
       console.log('Total records:', records.length);
-      console.log('Records array:', records);
 
       if (actualIndex === -1) {
-        // Fallback: try to find by just the most unique fields
-        const fallbackIndex = records.findIndex(record => 
-          record.propertyName === recordToDelete.propertyName &&
-          record.effectiveDate === recordToDelete.effectiveDate &&
-          record.entity === recordToDelete.entity
-        );
-        
-        console.log('Fallback index found:', fallbackIndex);
-        
-        if (fallbackIndex === -1) {
-          console.error('Could not find record in original records array');
-          console.error('Looking for record:', recordToDelete);
-          console.error('Available records:', records);
-          throw new Error('Record not found in original records');
-        }
-        
-        console.log('Using fallback index:', fallbackIndex);
-        const response = await fetch(`http://localhost:8000/api/dashboard/delete?index=${fallbackIndex}`, {
-          method: 'DELETE',
-        });
-
-        console.log('Fallback delete API response status:', response.status);
-        console.log('Fallback delete API response ok:', response.ok);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Fallback delete API error response:', errorText);
-          throw new Error(`Failed to delete record: ${response.status} - ${errorText}`);
-        }
-
-        // Remove the record from the local state
-        setRecords(prevRecords => prevRecords.filter((_, i) => i !== fallbackIndex));
-        setDeleteConfirmIndex(null);
-        return;
+        console.error('Could not find record in original records array');
+        console.error('Looking for record:', recordToDelete);
+        throw new Error('Record not found in original records');
       }
 
       console.log('Sending delete request with actual index:', actualIndex);
-      const response = await fetch(`http://localhost:8000/api/dashboard/delete?index=${actualIndex}`, {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${actualIndex}`, {
         method: 'DELETE',
       });
 
@@ -433,6 +389,9 @@ export default function Dashboard() {
       // Remove the record from the local state
       setRecords(prevRecords => prevRecords.filter((_, i) => i !== actualIndex));
       setDeleteConfirmIndex(null);
+      
+      // Refresh the data to ensure consistency
+      fetchDashboardData(currentPage);
     } catch (error) {
       console.error('Error deleting record:', error);
       setError(error instanceof Error ? error.message : 'An error occurred while deleting the record');
@@ -442,23 +401,26 @@ export default function Dashboard() {
   const handleDeduplicate = async () => {
     try {
       setError(null);
-      const response = await fetch('http://localhost:8000/api/dashboard/deduplicate', {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/deduplicate`, {
         method: 'POST',
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to deduplicate records');
+        const errorText = await response.text();
+        throw new Error(`Failed to deduplicate: ${response.status} - ${errorText}`);
       }
-      
+
       const result = await response.json();
-      if (result.error) {
-        throw new Error(result.error);
-      }
+      console.log('Deduplication result:', result);
       
-      // Refresh the data
-      fetchDashboardData(currentPage);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while deduplicating');
+      // Refresh the data to show the deduplicated results
+      fetchDashboardData();
+      
+      // Show success message
+      setError(`Success: ${result.message}. Removed ${result.duplicates_removed} duplicates.`);
+    } catch (error) {
+      console.error('Error deduplicating:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred while deduplicating');
     }
   };
 
@@ -467,14 +429,14 @@ export default function Dashboard() {
       setError(null);
       
       // Try the new clear endpoint first
-      let response = await fetch('http://localhost:8000/api/dashboard/clear', {
+              let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/clear`, {
         method: 'POST',
       });
 
       if (!response.ok) {
         // Fallback: use deploy endpoint with empty array
         console.log('Clear endpoint not available, using deploy fallback');
-        response = await fetch('http://localhost:8000/api/deploy', {
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/deploy`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -602,154 +564,8 @@ export default function Dashboard() {
     }
   };
 
-  // Normalize property name to handle common issues
-  const normalizePropertyName = (name: string): string => {
-    if (!name) return '';
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-      .trim();
-  };
-
-  // Group records by property name only to combine decimal interests
-  const groupRecordsByProperty = (records: DashboardRecord[]): DashboardRecord[] => {
-    console.log('=== STARTING GROUPING PROCESS ===');
-    console.log(`Total records to process: ${records.length}`);
-    
-    // First, let's see all the raw property names
-    console.log('=== ALL RAW PROPERTY NAMES ===');
-    records.forEach((record, index) => {
-      const normalized = normalizePropertyName(record.propertyName || '');
-      console.log(`${index}: Original="${record.propertyName}" -> Normalized="${normalized}" (length: ${record.propertyName?.length}, char codes: ${record.propertyName?.split('').map(c => c.charCodeAt(0)).join(',')})`);
-    });
-    
-    // First, group all records by property name
-    const propertyGroups = new Map<string, DashboardRecord[]>();
-    
-    records.forEach((record, index) => {
-      const originalName = record.propertyName || '';
-      // Use normalized property name as the key
-      const key = normalizePropertyName(originalName);
-      
-      console.log(`Record ${index}: Original="${originalName}" -> Normalized="${key}"`);
-      
-      if (!propertyGroups.has(key)) {
-        propertyGroups.set(key, []);
-        console.log(`  Created new group for "${key}"`);
-      } else {
-        console.log(`  Added to existing group for "${key}"`);
-      }
-      propertyGroups.get(key)!.push(record);
-    });
-    
-    // Debug: Log the grouping results
-    console.log('=== GROUPING RESULTS ===');
-    let totalGroupedRecords = 0;
-    propertyGroups.forEach((groupRecords, propertyName) => {
-      console.log(`Property: "${propertyName}" has ${groupRecords.length} records:`);
-      groupRecords.forEach((record, index) => {
-        console.log(`  ${index}: decimal="${record.decimalInterest}"`);
-      });
-      totalGroupedRecords += groupRecords.length;
-    });
-    console.log(`Total records in groups: ${totalGroupedRecords}`);
-    
-    // Now combine each group into a single record
-    const combinedRecords: DashboardRecord[] = [];
-    
-    propertyGroups.forEach((groupRecords, propertyName) => {
-      if (groupRecords.length === 0) return;
-      
-      console.log(`\nProcessing group for "${propertyName}" with ${groupRecords.length} records`);
-      
-      // Start with the first record as the base
-      const baseRecord = { ...groupRecords[0] };
-      
-      // Collect all decimal interests
-      const allDecimalInterests: string[] = [];
-      groupRecords.forEach((record, index) => {
-        if (record.decimalInterest && record.decimalInterest.trim()) {
-          allDecimalInterests.push(record.decimalInterest.trim());
-          console.log(`  Record ${index}: adding decimal "${record.decimalInterest.trim()}"`);
-        }
-      });
-      
-      // Combine all decimal interests with commas
-      if (allDecimalInterests.length > 0) {
-        baseRecord.decimalInterest = allDecimalInterests.join(', ');
-        console.log(`  Combined decimals: "${baseRecord.decimalInterest}"`);
-      }
-      
-      // Keep the most recent scan date
-      let mostRecentDate = baseRecord.dateScannedIn;
-      groupRecords.forEach(record => {
-        if (record.dateScannedIn && (!mostRecentDate || record.dateScannedIn > mostRecentDate)) {
-          mostRecentDate = record.dateScannedIn;
-        }
-      });
-      baseRecord.dateScannedIn = mostRecentDate;
-      
-      // Keep the first non-empty status
-      let finalStatus = baseRecord.status;
-      if (!finalStatus) {
-        for (const record of groupRecords) {
-          if (record.status) {
-            finalStatus = record.status;
-            break;
-          }
-        }
-      }
-      baseRecord.status = finalStatus;
-      
-      // Combine all notes
-      const allNotes: string[] = [];
-      groupRecords.forEach(record => {
-        if (record.notes && record.notes.trim()) {
-          allNotes.push(record.notes.trim());
-        }
-      });
-      if (allNotes.length > 0) {
-        baseRecord.notes = allNotes.join('; ');
-      }
-      
-      // Keep the first available PDF path
-      let pdfPath = baseRecord.originalPdfPath;
-      if (!pdfPath) {
-        for (const record of groupRecords) {
-          if (record.originalPdfPath) {
-            pdfPath = record.originalPdfPath;
-            break;
-          }
-        }
-      }
-      baseRecord.originalPdfPath = pdfPath;
-      
-      console.log(`Final combined record for "${propertyName}": "${baseRecord.decimalInterest}"`);
-      
-      combinedRecords.push(baseRecord);
-    });
-    
-    console.log('=== FINAL RESULTS ===');
-    console.log(`Original records: ${records.length}`);
-    console.log(`Grouped records: ${combinedRecords.length}`);
-    combinedRecords.forEach((record: DashboardRecord, index: number) => {
-      console.log(`${index}: "${record.propertyName}" (decimal: "${record.decimalInterest}")`);
-    });
-    
-    return combinedRecords;
-  };
-
-  // Group and then filter records based on search term
-  const groupedRecords = groupRecordsByProperty(records);
-  
-  // TEMPORARY: Let's also show the original records for comparison
-  console.log('=== COMPARISON: Original vs Grouped ===');
-  console.log('Original records:', records.length);
-  console.log('Grouped records:', groupedRecords.length);
-  
-  const filteredRecords = groupedRecords.filter((record: DashboardRecord) => {
+  // Filter records based on search term
+  const filteredRecords = records.filter(record => {
     if (!searchTerm) return true;
     
     // Split search term into words
@@ -785,7 +601,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Division Orders Dashboard</h1>
-              <p className="text-gray-600 text-sm">Showing {filteredRecords.length} of {groupedRecords.length} grouped records (from {totalRecords} total records)</p>
+              <p className="text-gray-600 text-sm">Showing {records.length} of {totalRecords} records</p>
             </div>
             <div className="flex gap-3">
             <div className="relative">
@@ -830,7 +646,9 @@ export default function Dashboard() {
               onClick={handleClearDashboard}
               className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 flex items-center gap-2 text-sm"
             >
-              <FiTrash2 className="h-4 w-4" />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
               Clear Dashboard
             </button>
           </div>
@@ -866,7 +684,7 @@ export default function Dashboard() {
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-24">Decimal Interest</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-24">Effective Date</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-24">Date Scanned In</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-20">Notes</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-32">Notes</th>
                     <th scope="col" className="px-3 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap w-16">Actions</th>
                   </tr>
                 </thead>
@@ -890,27 +708,22 @@ export default function Dashboard() {
                             ))}
                           </select>
                         ) : (
-                          <div className="flex items-center gap-2">
-                            <div
-                              onClick={() => setEditingStatus(prev => ({ ...prev, [index]: record.status || '' }))}
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-100 transition-colors duration-150 ${
-                                record.status === 'Good' 
-                                  ? 'bg-green-100 text-green-800'
-                                  : record.status === 'Low interest'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : record.status === 'High interest'
-                                  ? 'bg-orange-100 text-orange-800'
-                                  : record.status === 'Title issue'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                              title="Click to edit status"
-                            >
-                              {record.status || 'Click to edit'}
-                            </div>
-                            {record.originalPdfPath && (
-                              <div className="w-2 h-2 bg-green-500 rounded-full" title="PDF available for execution"></div>
-                            )}
+                          <div
+                            onClick={() => setEditingStatus(prev => ({ ...prev, [index]: record.status || '' }))}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-100 transition-colors duration-150 ${
+                              record.status === 'Executed' 
+                                ? 'bg-green-100 text-green-800'
+                                : record.status === 'Curative'
+                                ? 'bg-orange-100 text-orange-800'
+                                : record.status === 'Title issue'
+                                ? 'bg-red-100 text-red-800'
+                                : record.status === 'Pending Review'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                            title="Click to edit status"
+                          >
+                            {record.status || 'Click to edit'}
                           </div>
                         )}
                       </td>
@@ -982,7 +795,7 @@ export default function Dashboard() {
                         ) : (
                           <div
                             onClick={() => setEditingNotes(prev => ({ ...prev, [index]: record.notes || '' }))}
-                            className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-md transition-colors duration-150 text-xs truncate max-w-20"
+                            className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-md transition-colors duration-150 text-xs break-words max-w-32 leading-tight line-clamp-3"
                             title={record.notes || 'Click to edit'}
                           >
                             {record.notes || 'Click to edit'}
@@ -991,27 +804,18 @@ export default function Dashboard() {
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex items-center space-x-2">
-                          {/* Show Execute button only if PDF path exists */}
-                          {record.originalPdfPath ? (
-                            executingIndex === index ? (
-                              <div className="animate-spin h-4 w-4 text-green-600"></div>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  console.log('Executing record with PDF:', record.originalPdfPath);
-                                  handleExecute(record, index);
-                                }}
-                                className="text-green-600 hover:text-green-900"
-                                title="Execute - Go to sign page with PDF"
-                              >
-                                <FiPlay className="h-4 w-4" />
-                              </button>
-                            )
-                          ) : (
-                            <span className="text-xs text-gray-400" title="No PDF file available for this record">
-                              No PDF
-                            </span>
+                          {/* Execute button - only show if PDF is available */}
+                          {record.originalPdfPath && (
+                            <button
+                              onClick={() => handleExecute(record, index)}
+                              disabled={executingIndex === index}
+                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Execute PDF (go to sign page)"
+                            >
+                              <FiFile className="h-4 w-4" />
+                            </button>
                           )}
+                          
                           {deleteConfirmIndex === index ? (
                             <>
                               <button

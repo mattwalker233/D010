@@ -65,7 +65,7 @@ function SignPageContent() {
       console.log('Loading PDF from backend:', filename);
       
       // Fetch the PDF from the backend
-      const response = await fetch(`http://localhost:8000/api/pdf/${encodeURIComponent(filename)}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/pdf/${encodeURIComponent(filename)}`);
       
       if (!response.ok) {
         if (response.status === 404) {

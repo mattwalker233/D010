@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from PyPDF2 import PdfReader
 import pytesseract
@@ -937,7 +937,7 @@ async def update_dashboard_record(data: dict):
         return {"error": str(e)}
 
 @app.delete("/api/dashboard/delete")
-async def delete_record(index: int):
+async def delete_record(index: int = Query(..., description="Index of record to delete")):
     print("=" * 50)
     print("DELETE REQUEST RECEIVED!")
     print("=" * 50)
@@ -957,18 +957,18 @@ async def delete_record(index: int):
             print("No JSON files found")
             raise HTTPException(status_code=404, detail="No dashboard data found")
             
-        # Read the most recent file - use a more robust method
-        try:
-            latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
-        except Exception as e:
-            print(f"Error finding latest file with getctime: {e}")
-            # Fallback: use the last file alphabetically (should be the most recent timestamp)
+        # Always use the main dashboard data file
+        if 'dashboard_data_main.json' in json_files:
+            latest_file = 'dashboard_data_main.json'
+        else:
+            # Fallback: use the most recent file
             try:
+                latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
+            except Exception as e:
+                print(f"Error finding latest file with getctime: {e}")
+                # Fallback: use the last file alphabetically
                 latest_file = sorted(json_files)[-1]
                 print(f"Using fallback method, latest file: {latest_file}")
-            except Exception as e2:
-                print(f"Error with fallback method: {e2}")
-                raise HTTPException(status_code=500, detail=f"Error finding latest file: {str(e2)}")
         
         file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
         print(f"Using file: {file_path}")

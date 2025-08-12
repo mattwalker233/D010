@@ -211,7 +211,7 @@ export default function Home() {
         replace: true  // Replace all existing records with new ones
       });
       console.log('Request body:', requestBody);
-      console.log('Making request to:', 'http://localhost:8000/api/deploy');
+              console.log('Making request to:', `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/deploy`);
 
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/deploy`, {
@@ -247,7 +247,7 @@ export default function Home() {
         });
         
         if (fetchError instanceof TypeError && fetchError.message === 'Failed to fetch') {
-          throw new Error('Unable to connect to the server. Please make sure the backend server is running at http://localhost:8000 and CORS is properly configured.');
+          throw new Error(`Unable to connect to the server. Please make sure the backend server is running at ${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'} and CORS is properly configured.`);
         }
         throw fetchError;
       }
