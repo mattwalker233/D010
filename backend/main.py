@@ -67,8 +67,13 @@ except Exception as e:
 print("=== ALL IMPORTS SUCCESSFUL ===")
 
 # Load environment variables first
+print("=== LOADING ENVIRONMENT VARIABLES ===")
 from dotenv import load_dotenv
 load_dotenv()
+print("=== ENVIRONMENT VARIABLES LOADED ===")
+print(f"TESSERACT_PATH: {os.getenv('TESSERACT_PATH')}")
+print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT')}")
+print("=== STARTING TESSERACT SETUP ===")
 
 # Set Tesseract path based on environment
 TESSERACT_PATH = os.getenv("TESSERACT_PATH", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
