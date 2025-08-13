@@ -1,44 +1,16 @@
 [
   {
-    "propertyName": "LONDYN 9_4-14N-11W2HX",
-    "operator": "DEVON ENERGY PRODUCTION CO, LP",
-    "entity": "ALLDALE MINERALS LP",
-    "propertyDescription": "Secs. 9&4-14N-11W Allocs. Sec.9-49.47% Sec.4-50.53%",
-    "decimalInterest": "0.00579727",
+    "propertyName": "PAYNE 1-10H",
+    "operator": "CONTINENTAL RESOURCES INC",
+    "entity": "BLUE SKY MINERALS LP",
+    "propertyDescription": "SEC 10-T13N-R13W SPACING UNIT 640",
+    "decimalInterest": "0.00822752",
     "county": "BLAINE",
     "state": "OK",
-    "effectiveDate": "10/1/2024",
+    "effectiveDate": "06/10/2025",
     "status": "",
     "notes": "",
-    "originalPdfPath": "DOC.pdf",
-    "dateScannedIn": "2025-08-12"
-  },
-  {
-    "propertyName": "LONDYN 9_4-14N-11W4HX",
-    "operator": "DEVON ENERGY PRODUCTION CO, LP",
-    "entity": "ALLDALE MINERALS LP",
-    "propertyDescription": "Secs. 9&4-14N-11W Allocs. Sec.9-50.08% Sec.4-49.92%",
-    "decimalInterest": "0.00586875",
-    "county": "BLAINE",
-    "state": "OK",
-    "effectiveDate": "10/1/2024",
-    "status": "",
-    "notes": "",
-    "originalPdfPath": "DOC.pdf",
-    "dateScannedIn": "2025-08-12"
-  },
-  {
-    "propertyName": "LONDYN 9_4-14N-11W5HX",
-    "operator": "DEVON ENERGY PRODUCTION CO, LP",
-    "entity": "ALLDALE MINERALS LP",
-    "propertyDescription": "Secs. 9&4-14N-11W Allocs. Sec.9-49.95% Sec.4-50.05%",
-    "decimalInterest": "0.00585352",
-    "county": "BLAINE",
-    "state": "OK",
-    "effectiveDate": "10/1/2024",
-    "status": "",
-    "notes": "",
-    "originalPdfPath": "DOC.pdf",
-    "dateScannedIn": "2025-08-12"
+    "originalPdfPath": "Payne 1-10 continental.pdf",
+    "dateScannedIn": "2025-08-13"
   }
 ]
