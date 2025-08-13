@@ -21,8 +21,8 @@ COPY . .
 # Set Tesseract path environment variable
 ENV TESSERACT_PATH=/usr/bin/tesseract
 
-# Expose port
+# Expose port (Railway will override this)
 EXPOSE 8000
 
-# Start the application
-CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"] 
+# Start the application with Railway-compatible port binding
+CMD gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} 
