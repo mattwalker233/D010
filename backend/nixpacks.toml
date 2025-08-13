@@ -1,1 +1,11 @@
-# This file has been disabled for Render deployment 
+[phases.setup]
+nixPkgs = ["tesseract", "tesseract-data-eng", "poppler", "poppler-utils"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[phases.build]
+cmds = ["echo 'Build complete'"]
+
+[start]
+cmd = "gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT" 
