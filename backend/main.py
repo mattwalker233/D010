@@ -123,12 +123,17 @@ else:
         pass
 
 # Initialize FastAPI app
+print("=== CREATING FASTAPI APP ===")
 app = FastAPI()
+print("=== FASTAPI APP CREATED ===")
 
 # Root endpoint for healthcheck
+print("=== DEFINING ROOT ENDPOINT ===")
 @app.get("/")
 async def root():
+    print("=== ROOT ENDPOINT CALLED ===")
     return {"message": "Division Orderly Backend API", "status": "healthy"}
+print("=== ROOT ENDPOINT DEFINED ===")
 
 # Get allowed origins from environment or use defaults
 ALLOWED_ORIGINS = []
