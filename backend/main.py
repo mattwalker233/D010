@@ -33,11 +33,8 @@ if os.name == 'nt':  # Windows
         print(f"Error initializing Tesseract: {str(e)}")
         print(f"Tesseract path: {TESSERACT_PATH}")
         print("For production deployment, set TESSERACT_PATH environment variable")
-        # Don't fail in production, just warn
-        if os.getenv("ENVIRONMENT") == "production":
-            print("Running in production mode - Tesseract OCR disabled")
-        else:
-            raise Exception("Tesseract initialization failed. Please check installation.")
+        print("Running in production mode - Tesseract OCR disabled")
+        # Don't crash in production
 else:
     # Linux/Unix - try to find tesseract in PATH
     try:
