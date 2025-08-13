@@ -1,24 +1,73 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from PyPDF2 import PdfReader
-import pytesseract
-from PIL import Image
-import io
-import anthropic
 import os
-from dotenv import load_dotenv
-import tempfile
-import fitz  # PyMuPDF
-import json
-from datetime import datetime
-import pathlib
-import glob
-from PIL import ImageEnhance
-import re
-from PIL import ImageOps
-from fastapi.responses import Response
+import sys
+
+print("=== STARTING BACKEND ===")
+print(f"Python version: {sys.version}")
+print(f"Current working directory: {os.getcwd()}")
+
+try:
+    print("Importing FastAPI...")
+    from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+    print("FastAPI imported successfully")
+except Exception as e:
+    print(f"FastAPI import failed: {e}")
+    sys.exit(1)
+
+try:
+    print("Importing CORS middleware...")
+    from fastapi.middleware.cors import CORSMiddleware
+    print("CORS middleware imported successfully")
+except Exception as e:
+    print(f"CORS middleware import failed: {e}")
+    sys.exit(1)
+
+try:
+    print("Importing PyPDF2...")
+    from PyPDF2 import PdfReader
+    print("PyPDF2 imported successfully")
+except Exception as e:
+    print(f"PyPDF2 import failed: {e}")
+    sys.exit(1)
+
+try:
+    print("Importing pytesseract...")
+    import pytesseract
+    print("pytesseract imported successfully")
+except Exception as e:
+    print(f"pytesseract import failed: {e}")
+    sys.exit(1)
+
+try:
+    print("Importing PIL...")
+    from PIL import Image
+    print("PIL imported successfully")
+except Exception as e:
+    print(f"PIL import failed: {e}")
+    sys.exit(1)
+
+try:
+    print("Importing other modules...")
+    import io
+    import anthropic
+    import tempfile
+    import fitz  # PyMuPDF
+    import json
+    from datetime import datetime
+    import pathlib
+    import glob
+    from PIL import ImageEnhance
+    import re
+    from PIL import ImageOps
+    from fastapi.responses import Response
+    print("All other modules imported successfully")
+except Exception as e:
+    print(f"Other modules import failed: {e}")
+    sys.exit(1)
+
+print("=== ALL IMPORTS SUCCESSFUL ===")
 
 # Load environment variables first
+from dotenv import load_dotenv
 load_dotenv()
 
 # Set Tesseract path based on environment
