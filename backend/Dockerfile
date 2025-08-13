@@ -24,5 +24,8 @@ ENV TESSERACT_PATH=/usr/bin/tesseract
 # Expose port (Railway will override this)
 EXPOSE 8000
 
-# Start the application with Railway-compatible port binding
-CMD gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} 
+# Create a startup script to handle PORT variable
+RUN echo '#!/bin/bash\nPORT=${PORT:-8000}\necho "Starting on port $PORT"\nexec gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT' > /app/start.sh && chmod +x /app/start.sh
+
+# Start the application using the startup script
+CMD ["/app/start.sh"] 
