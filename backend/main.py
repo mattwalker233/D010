@@ -67,16 +67,14 @@ else:
                 print(f"Tesseract version: {version} found in PATH")
             except Exception as e:
                 print(f"Error initializing Tesseract: {str(e)}")
-                if os.getenv("ENVIRONMENT") == "production":
-                    print("Running in production mode - Tesseract OCR disabled")
-                else:
-                    print("Tesseract not found in PATH")
+                print("Running in production mode - Tesseract OCR disabled")
+                # Don't crash in production
+                pass
     except Exception as e:
         print(f"Error initializing Tesseract: {str(e)}")
-        if os.getenv("ENVIRONMENT") == "production":
-            print("Running in production mode - Tesseract OCR disabled")
-        else:
-            print("Tesseract not found in PATH")
+        print("Running in production mode - Tesseract OCR disabled")
+        # Don't crash in production
+        pass
 
 # Initialize FastAPI app
 app = FastAPI()
