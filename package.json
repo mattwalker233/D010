@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "rm -rf .next out",
-    "db:migrate": "tsx scripts/init-db.ts"
+    "db:migrate": "tsx scripts/init-db.ts",
+    "update-sticker-addresses": "tsx scripts/update-sticker-addresses.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.18.0",

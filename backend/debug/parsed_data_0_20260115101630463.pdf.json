@@ -1,0 +1,26 @@
+{
+  "operator": "PIONEER NATURAL RESOURCES USA, INC.",
+  "entity": "AR MIDLAND LP",
+  "state": "Texas",
+  "effectiveDate": "Current Production",
+  "wells": [
+    {
+      "propertyName": "TROPICANA EAST K 14-26 2811H",
+      "propertyDescription": "SHL: 459\" FNL & 1749\" FWL SEC 26, A-1225; BHL: 101' FNL & 1932' FEL SEC 14, BLK 36, T4S, T&P RR CO, A-1189, ALSO TRAVERSING THROUGH SEC 23, BLK 36, T4S, T&P RR CO SVY, A-426",
+      "decimalInterest": "0.00132989",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "TROPICANA EAST M 14-26 2813H",
+      "propertyDescription": "SHL: 289\" FNL & 2595' FEL SEC 26, A-1225; BHL: 102' FNL & 1120 FEL SEC 14, BLK 36, T4S, T&P RR CO, A-1189, ALSO TRAVERSING THROUGH SEC 23, BLK 36, T4S, T&P RR CO SVY, A-426",
+      "decimalInterest": "0.00135218",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "TROPICANA EAST O 14-26 2815H",
+      "propertyDescription": "SHL: 289\" FNL & 2515' FEL SEC 26, A-1225; BHL: 100' FNL & 337\" FEL SEC 14, BLK 36, T4S, T&P RR CO, A-1189, ALSO TRAVERSING THROUGH SEC 23, BLK 36, T4S, T&P RR CO SVY, A-426",
+      "decimalInterest": "0.00134024",
+      "county": "Glasscock"
+    }
+  ]
+}

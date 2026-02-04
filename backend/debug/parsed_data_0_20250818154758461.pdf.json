@@ -1,0 +1,26 @@
+{
+  "operator": "GREENLAKE ENERGY",
+  "entity": "RANCHITO AD4, LP",
+  "state": "TX",
+  "effectiveDate": "First Production",
+  "wells": [
+    {
+      "propertyName": "VELMA CHARTER 2H",
+      "propertyDescription": "SEC 01 BLK 2 SEC 2",
+      "decimalInterest": "0.00520500",
+      "county": "REEVES"
+    },
+    {
+      "propertyName": "VELMA CHARTER 3H",
+      "propertyDescription": "SEC 01 BLK 2 SEC 2",
+      "decimalInterest": "0.00520500",
+      "county": "REEVES"
+    },
+    {
+      "propertyName": "VELMA CHARTER 4H",
+      "propertyDescription": "SEC 01 BLK 2 SEC 2",
+      "decimalInterest": "0.00520500",
+      "county": "REEVES"
+    }
+  ]
+}

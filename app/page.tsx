@@ -173,6 +173,23 @@ export default function Home() {
     setEditedResults(updatedResults);
   };
 
+  const handleDeleteWell = (resultIndex: number, wellIndex: number) => {
+    if (!editedResults[resultIndex]) return;
+
+    const updatedResults = [...editedResults];
+    const updatedWells = [...updatedResults[resultIndex].wells];
+    
+    // Remove the well at the specified index
+    updatedWells.splice(wellIndex, 1);
+    
+    updatedResults[resultIndex] = {
+      ...updatedResults[resultIndex],
+      wells: updatedWells
+    };
+    
+    setEditedResults(updatedResults);
+  };
+
   const handleDeploy = async () => {
     if (editedResults.length === 0) return;
     
@@ -620,6 +637,15 @@ export default function Home() {
                                           className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                                         />
                                       </div>
+                                    </div>
+                                    <div className="flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteWell(resultIndex, wellIndex)}
+                                        className="px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-200 hover:border-red-300 transition-all duration-200"
+                                      >
+                                        Delete Well
+                                      </button>
                                     </div>
                                   </>
                                 ) : (

@@ -1,0 +1,64 @@
+```json
+{
+    "operator": "PIONEER NATURAL RESOURCES USA, INC.",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "Texas",
+    "effectiveDate": "Current Production",
+    "wells": [
+        {
+            "propertyName": "RILEY 26A 127H",
+            "propertyDescription": "SHL: 460' FNL & 2339' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 101'FSL & 641' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00265196",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26B 128H",
+            "propertyDescription": "SHL: 460' FNL & 2369' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 100'FSL & 482' FEL SEC 38; BLK 36, T4S, T&P RR, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00265153",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26D 104H",
+            "propertyDescription": "SHL: 289' FNL & 2094' FWL SEC 26, BLK 36, T4S, ET COBB SVY A-1225; BHL: 100'FSL & 354' FWL SEC 38; BLK 36, T4S, T&P RR CO, A-1119;ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00264491",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26E 105H",
+            "propertyDescription": "SHL: 289' FNL & 2114' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 101'FSL & 2074' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00264121",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26F 106H",
+            "propertyDescription": "SHL: 289' FNL & 2134' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 101'FSL & 1926' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00263972",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26G 107H",
+            "propertyDescription": "SHL: 289' FNL & 2154' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 100'FSL & 1572' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00266690",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26H 108H",
+            "propertyDescription": "SHL: 289' FNL & 2174' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 102'FSL & 1409' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119;ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00267250",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26I 109H",
+            "propertyDescription": "SHL: 289' FNL & 2194' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 100'FSL & 1194' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00264168",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "RILEY 26Z 126H",
+            "propertyDescription": "SHL: 460' FNL & 2309' FWL SEC 26, BLK 36, T4S, ET COBB SVY, A-1225; BHL: 101'FSL & 837' FEL SEC 38; BLK 36, T4S, T&P RR CO, A-1119; ALSO TRAVERSING SEC 25, BLK 36, T4S T&P RR CO SVY, A-427 AND SEC 35, BLK 36, T4S, T&P RR CO SVY, A-432",
+            "decimalInterest": "0.00265204",
+            "county": "Glasscock"
+        }
+    ]
+}
+```

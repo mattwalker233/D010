@@ -5,6 +5,37 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { prisma } from '@/lib/prisma';
 
+// Function to generate PDF filename based on Entity_DO_Operator_WellName format
+function generatePdfFilename(operator: string, entity: string, wellName: string): string {
+  // Clean and sanitize the inputs
+  function sanitizeFilename(text: string): string {
+    if (!text) return "Unknown";
+    // Remove or replace invalid filename characters (including forward slash)
+    const invalidChars = '<>:"/\\|?*&()[]{}#%+=!@$^~`';
+    for (const char of invalidChars) {
+      text = text.replace(new RegExp('\\' + char, 'g'), '_');
+    }
+    // Keep spaces within the text, just clean up extra spaces
+    text = text.trim().replace(/\s+/g, ' ');
+    // Remove multiple consecutive underscores
+    while (text.includes('__')) {
+      text = text.replace('__', '_');
+    }
+    // Remove leading/trailing underscores
+    text = text.replace(/^_+|_+$/g, '');
+    // Limit length to avoid filesystem issues
+    return text.substring(0, 50);
+  }
+  
+  // Sanitize inputs
+  const cleanEntity = sanitizeFilename(entity);
+  const cleanOperator = sanitizeFilename(operator);
+  const cleanWellName = sanitizeFilename(wellName);
+  
+  // Generate filename: Entity-DO-Operator-WellName.pdf
+  return `${cleanEntity} - DO - ${cleanOperator} - ${cleanWellName}.pdf`;
+}
+
 interface FieldLocation {
   x: number;
   y: number;
@@ -188,9 +219,29 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const entityId = formData.get('entityId') as string;
+    const operatorName = formData.get('operatorName') as string;
+    const wellName = formData.get('wellName') as string;
     const signaturePositionsStr = formData.get('signaturePositions') as string;
+    
     const placeStickerOnEveryPageStr = formData.get('placeStickerOnEveryPage') as string;
     const placeStickerOnEveryPage = placeStickerOnEveryPageStr === 'true';
+    
+    const stickerPageSelection = formData.get('stickerPageSelection') as string;
+    const selectedStickerPageStr = formData.get('selectedStickerPage') as string;
+    const selectedStickerPage = parseInt(selectedStickerPageStr) || 1;
+    
+    const renameOnlyStr = formData.get('renameOnly') as string;
+    const renameOnly = renameOnlyStr === 'true';
+    
+    console.log('=== SIGN PDF DEBUG ===');
+    console.log('Received operatorName:', operatorName, '(type:', typeof operatorName, ')');
+    console.log('Received wellName:', wellName, '(type:', typeof wellName, ')');
+    console.log('Received entityId:', entityId, '(type:', typeof entityId, ')');
+    console.log('Received renameOnly:', renameOnly, '(type:', typeof renameOnly, ')');
+    console.log('Received stickerPageSelection:', stickerPageSelection);
+    console.log('Received selectedStickerPage:', selectedStickerPage);
+    console.log('File name:', file?.name);
+    console.log('File size:', file?.size);
 
     if (!file || !entityId) {
       return NextResponse.json(
@@ -203,6 +254,9 @@ export async function POST(request: Request) {
     const entity = await prisma.entity.findUnique({
       where: { id: entityId }
     });
+
+    console.log('Fetched entity:', entity);
+    console.log('Rename-only mode:', renameOnly ? 'ENABLED - PDF will be renamed without signatures/stickers' : 'DISABLED - PDF will be processed normally');
 
     if (!entity) {
       return NextResponse.json(
@@ -254,10 +308,12 @@ export async function POST(request: Request) {
       // Get manual signature positions for this page
       const pageSignaturePositions = manualSignaturePositions.filter(pos => pos.page === pageNum);
       
-          // Only place signatures if user actually clicked to place them
-    if (pageSignaturePositions.length === 0) {
-      console.log(`No signatures placed by user on page ${pageNum} - skipping signature placement`);
-    } else {
+      // Only process signatures and stickers if not in rename-only mode
+      if (!renameOnly) {
+        // Only place signatures if user actually clicked to place them
+        if (pageSignaturePositions.length === 0) {
+          console.log(`No signatures placed by user on page ${pageNum} - skipping signature placement`);
+        } else {
       console.log(`Processing ${pageSignaturePositions.length} signatures for page ${pageNum}`);
       
       for (const position of pageSignaturePositions) {
@@ -270,78 +326,129 @@ export async function POST(request: Request) {
           const signatureImage = await pdfDoc.embedPng(signatureBytes);
           console.log(`Signature image embedded successfully`);
           
-          // Get original signature dimensions to preserve aspect ratio
+          // Calculate signature size maintaining aspect ratio
+          const maxWidth = 120;
+          const maxHeight = 50;
+          
+          // Get the original image dimensions
           const originalWidth = signatureImage.width;
           const originalHeight = signatureImage.height;
           
-          // Calculate signature size while preserving aspect ratio
-          // Use a reasonable base height and scale width proportionally
-          const baseHeight = 50;
-          const signatureHeight = baseHeight;
-          const signatureWidth = (originalWidth / originalHeight) * baseHeight;
+          // Calculate aspect ratio
+          const aspectRatio = originalWidth / originalHeight;
           
-          // Ensure signature isn't too wide (max 200 points)
-          const maxWidth = 200;
-          const finalSignatureWidth = Math.min(signatureWidth, maxWidth);
-          const finalSignatureHeight = finalSignatureWidth === signatureWidth ? signatureHeight : (finalSignatureWidth / signatureWidth) * signatureHeight;
+          // Calculate new dimensions maintaining aspect ratio
+          let signatureWidth = maxWidth;
+          let signatureHeight = maxWidth / aspectRatio;
+          
+          // If height exceeds max, scale down by height instead
+          if (signatureHeight > maxHeight) {
+            signatureHeight = maxHeight;
+            signatureWidth = maxHeight * aspectRatio;
+          }
+          
+          console.log(`Original signature dimensions: ${originalWidth}x${originalHeight}`);
+          console.log(`Calculated signature dimensions: ${signatureWidth}x${signatureHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
           
           // Draw signature at the exact position clicked (centered on click point)
-          const signatureX = position.x - finalSignatureWidth / 2;
-          const signatureY = position.y - finalSignatureHeight / 2;
+          const signatureX = position.x - signatureWidth / 2;
+          const signatureY = position.y - signatureHeight / 2;
           
           console.log(`Page ${pageNum} dimensions: ${pageWidth}x${pageHeight}`);
           console.log(`Click position: (${position.x}, ${position.y})`);
-          console.log(`Original signature dimensions: ${originalWidth}x${originalHeight}`);
-          console.log(`Calculated signature size: ${signatureWidth.toFixed(1)}x${signatureHeight.toFixed(1)}`);
-          console.log(`Final signature size: ${finalSignatureWidth.toFixed(1)}x${finalSignatureHeight.toFixed(1)}`);
-          console.log(`Drawing signature at (${signatureX.toFixed(1)}, ${signatureY.toFixed(1)}) on page ${pageNum}`);
-          console.log(`Signature bounds: (${signatureX.toFixed(1)}, ${signatureY.toFixed(1)}) to (${(signatureX + finalSignatureWidth).toFixed(1)}, ${(signatureY + finalSignatureHeight).toFixed(1)})`);
+          console.log(`Signature size: ${signatureWidth}x${signatureHeight}`);
+          console.log(`Drawing signature at (${signatureX}, ${signatureY}) on page ${pageNum}`);
+          console.log(`Signature bounds: (${signatureX}, ${signatureY}) to (${signatureX + signatureWidth}, ${signatureY + signatureHeight})`);
           
           // Check if signature coordinates are within page bounds
           if (signatureX < 0 || signatureY < 0 || 
-              signatureX + finalSignatureWidth > pageWidth || 
-              signatureY + finalSignatureHeight > pageHeight) {
-            console.warn(`Signature may be outside page bounds: x=${signatureX.toFixed(1)}, y=${signatureY.toFixed(1)}, page=${pageWidth}x${pageHeight}`);
+              signatureX + signatureWidth > pageWidth || 
+              signatureY + signatureHeight > pageHeight) {
+            console.warn(`Signature may be outside page bounds: x=${signatureX}, y=${signatureY}, page=${pageWidth}x${pageHeight}`);
           }
           
           page.drawImage(signatureImage, {
             x: signatureX,
             y: signatureY,
-            width: finalSignatureWidth,
-            height: finalSignatureHeight,
+            width: signatureWidth,
+            height: signatureHeight,
           });
                     console.log(`Signature successfully drawn at position (${position.x}, ${position.y}) on page ${pageNum}`);
         } catch (err) {
           console.error('Error processing signature:', err);
         }
+        }
       }
-    }
-    }
+      } // End of rename-only check for signatures
+    } // End of rename-only check
 
-    // Add sticker to pages based on user preference
-    if (stickerText && stickerText.trim() !== '') {
-      // Determine which pages to add stickers to
-      const pagesToSticker = placeStickerOnEveryPage ? pages : [pages[0]];
+    // Add sticker to pages based on user preference (only if not in rename-only mode)
+    if (!renameOnly && stickerText && stickerText.trim() !== '') {
+      // Determine which pages to add stickers to based on selection
+      let pagesToSticker: any[] = [];
+      
+      if (stickerPageSelection === 'every') {
+        pagesToSticker = pages;
+      } else if (stickerPageSelection === 'specific') {
+        // Add sticker to specific page (convert to 0-based index)
+        const targetPage = pages[selectedStickerPage - 1];
+        if (targetPage) {
+          pagesToSticker = [targetPage];
+        } else {
+          console.warn(`Selected page ${selectedStickerPage} does not exist, using first page`);
+          pagesToSticker = [pages[0]];
+        }
+      } else {
+        // Default to first page
+        pagesToSticker = [pages[0]];
+      }
+      
+      console.log(`Sticker placement: ${stickerPageSelection}, pages to sticker: ${pagesToSticker.length}`);
       
       for (const page of pagesToSticker) {
         const { width, height } = page.getSize();
         console.log(`Page dimensions: ${width}x${height}`);
         
         // Process text to preserve original line breaks
-        const fontSize = 8; // Smaller font for more compact sticker
+        const fontSize = 8; // Slightly smaller font for more compact sticker
         const lineHeight = fontSize + 1; // Tighter line spacing
-        const padding = 12; // Increased padding to prevent text cutoff
+        const padding = 8; // Reduced padding for smaller sticker
         const cornerRadius = 4; // Smaller rounded corners
-        const maxStickerWidth = Math.min(400, width * 0.4); // Larger max width to accommodate longer text
+        const maxStickerWidth = Math.min(260, width * 0.26); // Slightly smaller max width
         const textMaxWidth = maxStickerWidth - (padding * 2);
         
-        // Preserve exact format from entity - split by line breaks only
-        const displayLines = stickerText.split('\n').filter(line => line.trim() !== '');
+        // Split text by original line breaks first
+        const originalLines = stickerText.split('\n');
+        const processedLines: string[] = [];
+        
+        // Process each original line
+        for (const originalLine of originalLines) {
+          const words = originalLine.trim().split(' ');
+          let currentLine = '';
+          
+          for (const word of words) {
+            const testLine = currentLine ? `${currentLine} ${word}` : word;
+            // More accurate width estimation using character count
+            const estimatedWidth = testLine.length * fontSize * 0.6; // More accurate multiplier
+            
+            if (estimatedWidth > textMaxWidth && currentLine) {
+              processedLines.push(currentLine);
+              currentLine = word;
+            } else {
+              currentLine = testLine;
+            }
+          }
+          
+          if (currentLine) {
+            processedLines.push(currentLine);
+          }
+        }
         
         // Calculate required height based on content - no line limit
+        const displayLines = processedLines;
         const totalTextHeight = displayLines.length * lineHeight;
         const requiredHeight = totalTextHeight + (padding * 2);
-        const stickerHeight = Math.max(35, requiredHeight); // Minimum 35 points
+        const stickerHeight = Math.max(50, requiredHeight); // Minimum 50 points
         
         // Calculate actual sticker width based on longest line
         let actualStickerWidth = maxStickerWidth;
@@ -349,7 +456,7 @@ export async function POST(request: Request) {
           const lineWidth = line.length * fontSize * 0.6;
           const lineRequiredWidth = lineWidth + (padding * 2);
           if (lineRequiredWidth > actualStickerWidth) {
-            actualStickerWidth = Math.min(lineRequiredWidth, width * 0.5); // Max 50% of page width for long lines
+            actualStickerWidth = Math.min(lineRequiredWidth, width * 0.32); // Max 32% of page width
           }
         }
         
@@ -419,12 +526,20 @@ export async function POST(request: Request) {
         displayLines.forEach((line, index) => {
           const lineY = stickerY + stickerHeight - padding - (index * lineHeight) - verticalOffset;
           
-          // Left-align text with extra padding to prevent cutoff
-          const textX = finalStickerX + padding + 2;
+          // Calculate center position for the line with improved accuracy
+          const lineWidth = line.length * fontSize * 0.55; // More accurate multiplier for centering
+          let centerX = finalStickerX + (finalStickerWidth / 2) - (lineWidth / 2);
+          
+          // Ensure text doesn't get cut off by adjusting position if needed
+          if (centerX < finalStickerX + padding) {
+            centerX = finalStickerX + padding; // Left-align if too close to left edge
+          } else if (centerX + lineWidth > finalStickerX + finalStickerWidth - padding) {
+            centerX = finalStickerX + finalStickerWidth - padding - lineWidth; // Right-align if too close to right edge
+          }
           
           // Add subtle text shadow for better readability
           page.drawText(line, {
-            x: textX + 0.5,
+            x: centerX + 0.5,
             y: lineY - 0.5,
             size: fontSize,
             color: rgb(0.1, 0.1, 0.1),
@@ -433,11 +548,11 @@ export async function POST(request: Request) {
           
           // Main text
           page.drawText(line, {
-            x: textX,
+            x: centerX,
             y: lineY,
             size: fontSize,
             color: rgb(0.25, 0.2, 0.15), // Warmer, more professional text color
-            maxWidth: finalStickerWidth - (padding * 2) - 4,
+            maxWidth: finalStickerWidth - (padding * 2),
           });
         });
         
@@ -461,8 +576,25 @@ export async function POST(request: Request) {
     const modifiedPdfBytes = await pdfDoc.save();
     console.log('PDF saved, size:', modifiedPdfBytes.length);
     
+    // Generate the new filename based on entity, operator, and well name
+    let newFilename = `signed_${file.name}`; // fallback
+    console.log('Filename generation check:');
+    console.log('- operatorName:', operatorName, '(truthy:', !!operatorName, ')');
+    console.log('- wellName:', wellName, '(truthy:', !!wellName, ')');
+    console.log('- entity:', entity, '(truthy:', !!entity, ')');
+    
+    // Generate the new filename based on entity, operator, and well name
+    if (operatorName && wellName && entity) {
+      newFilename = generatePdfFilename(operatorName, entity.entity_name, wellName);
+      console.log('Generated filename:', newFilename);
+    } else {
+      // Use fallback filename if data is missing
+      newFilename = `signed_${file.name}`;
+      console.log('Missing data, using fallback filename:', newFilename);
+    }
+    
     // Create a temporary file
-    const tempFilePath = join(tmpdir(), `signed_${Date.now()}.pdf`);
+    const tempFilePath = join(tmpdir(), newFilename);
     await writeFile(tempFilePath, modifiedPdfBytes);
     console.log('Temporary file created:', tempFilePath);
 
@@ -470,7 +602,7 @@ export async function POST(request: Request) {
     return new NextResponse(modifiedPdfBytes, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="signed_${file.name}"`,
+        'Content-Disposition': `attachment; filename="${newFilename}"`,
       },
     });
   } catch (error) {

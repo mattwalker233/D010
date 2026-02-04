@@ -1,0 +1,40 @@
+```json
+{
+    "operator": "PIONEER NATURAL RESOURCES USA, INC.",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "Texas",
+    "effectiveDate": "Current Production",
+    "wells": [
+        {
+            "propertyName": "FISCHER 10 #2",
+            "propertyDescription": "ALL S/2 SEC 10, BLK 36, T2S, T&P SVY",
+            "decimalInterest": "0.00878906",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "FISCHER 10 #3",
+            "propertyDescription": "ALL S/2 SEC 10, BLK 36, T2S, T&P SVY",
+            "decimalInterest": "0.00878906",
+            "county": "Glasscock"
+        },
+        {
+            "propertyName": "FISCHER 10 #4",
+            "propertyDescription": "ALL S/2 SEC 10, BLK 36, T2S, T&P SVY",
+            "decimalInterest": "0.00878906",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "FISCHER 10 #5",
+            "propertyDescription": "ALL S/2 SEC 10, BLK 36, T2S, T&P SVY",
+            "decimalInterest": "0.00878906",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "FISCHER 10 #6",
+            "propertyDescription": "ALL S/2 SEC 10, BLK 36, T2S, T&P SVY",
+            "decimalInterest": "0.00878906",
+            "county": "Midland"
+        }
+    ]
+}
+```

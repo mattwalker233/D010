@@ -1,0 +1,22 @@
+```json
+{
+    "operator": "Neptune Operating LLC",
+    "entity": "ALLDALE MINERALS LP",
+    "state": "ND",
+    "effectiveDate": "12/3/2024",
+    "wells": [
+        {
+            "propertyName": "LEE SOUTH 17-8-5 #7H - 8H",
+            "propertyDescription": "T151N - R101W - Sec. 5, 8, & 17 - Spacing: 1919.84",
+            "decimalInterest": "0.00781055",
+            "county": "MC KENZIE"
+        },
+        {
+            "propertyName": "LEE SOUTH 17-8-5 #7H - 8H",
+            "propertyDescription": "T151N - R101W - Sec. 5, 8, & 17 - Spacing: 1919.84",
+            "decimalInterest": "0.00520486",
+            "county": "MC KENZIE"
+        }
+    ]
+}
+```

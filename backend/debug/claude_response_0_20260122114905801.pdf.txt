@@ -1,0 +1,82 @@
+```json
+{
+    "operator": "Ovintiv USA Inc.",
+    "entity": "Tundra AD3, LP c/o Alldale Minerals 1li, LP",
+    "state": "TX",
+    "effectiveDate": "December 18, 2023",
+    "wells": [
+        {
+            "propertyName": "DRIFTWOOD W UNIT A 1JM (91351)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184750",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT A 1LS (91348)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184750",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT A 1WA (91352)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184750",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT A 1WB (91347)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184750",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT B 1MS (91349)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184750",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT B 2WA (91350)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184750",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT C 2JM (91353)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184807",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT C 2LS (91343)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000184808",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT D 2MS (91342)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000185516",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT D 3LS (91345)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000185461",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT D 3WA (91344)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000185385",
+            "county": "Martin"
+        },
+        {
+            "propertyName": "DRIFTWOOD W UNIT D 3WB (91354)",
+            "propertyDescription": "W/2 SEC. 22, BLK 36, T3N, A-846, T&P RR CO SURVEY NW/4 SEC 25, BLK 36, T3N, A-187 T&P RR CO SURVEY",
+            "decimalInterest": "0.0000185385",
+            "county": "Martin"
+        }
+    ]
+}
+```

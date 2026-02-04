@@ -1,79 +1,25 @@
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from PyPDF2 import PdfReader
+import pytesseract
+from PIL import Image
+import io
+import anthropic
 import os
-import sys
-
-print("=== STARTING BACKEND ===")
-print(f"Python version: {sys.version}")
-print(f"Current working directory: {os.getcwd()}")
-
-try:
-    print("Importing FastAPI...")
-    from fastapi import FastAPI, UploadFile, File, HTTPException, Query
-    print("FastAPI imported successfully")
-except Exception as e:
-    print(f"FastAPI import failed: {e}")
-    sys.exit(1)
-
-try:
-    print("Importing CORS middleware...")
-    from fastapi.middleware.cors import CORSMiddleware
-    print("CORS middleware imported successfully")
-except Exception as e:
-    print(f"CORS middleware import failed: {e}")
-    sys.exit(1)
-
-try:
-    print("Importing PyPDF2...")
-    from PyPDF2 import PdfReader
-    print("PyPDF2 imported successfully")
-except Exception as e:
-    print(f"PyPDF2 import failed: {e}")
-    sys.exit(1)
-
-try:
-    print("Importing pytesseract...")
-    import pytesseract
-    print("pytesseract imported successfully")
-except Exception as e:
-    print(f"pytesseract import failed: {e}")
-    sys.exit(1)
-
-try:
-    print("Importing PIL...")
-    from PIL import Image
-    print("PIL imported successfully")
-except Exception as e:
-    print(f"PIL import failed: {e}")
-    sys.exit(1)
-
-try:
-    print("Importing other modules...")
-    import io
-    import anthropic
-    import tempfile
-    import fitz  # PyMuPDF
-    import json
-    from datetime import datetime
-    import pathlib
-    import glob
-    from PIL import ImageEnhance
-    import re
-    from PIL import ImageOps
-    from fastapi.responses import Response
-    print("All other modules imported successfully")
-except Exception as e:
-    print(f"Other modules import failed: {e}")
-    sys.exit(1)
-
-print("=== ALL IMPORTS SUCCESSFUL ===")
+from dotenv import load_dotenv
+import tempfile
+import fitz  # PyMuPDF
+import json
+from datetime import datetime
+import pathlib
+import glob
+from PIL import ImageEnhance
+import re
+from PIL import ImageOps
+from fastapi.responses import Response
 
 # Load environment variables first
-print("=== LOADING ENVIRONMENT VARIABLES ===")
-from dotenv import load_dotenv
 load_dotenv()
-print("=== ENVIRONMENT VARIABLES LOADED ===")
-print(f"TESSERACT_PATH: {os.getenv('TESSERACT_PATH')}")
-print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT')}")
-print("=== STARTING TESSERACT SETUP ===")
 
 # Set Tesseract path based on environment
 TESSERACT_PATH = os.getenv("TESSERACT_PATH", r"C:\Program Files\Tesseract-OCR\tesseract.exe")
@@ -87,69 +33,28 @@ if os.name == 'nt':  # Windows
         print(f"Error initializing Tesseract: {str(e)}")
         print(f"Tesseract path: {TESSERACT_PATH}")
         print("For production deployment, set TESSERACT_PATH environment variable")
-        print("Running in production mode - Tesseract OCR disabled")
-        # Don't crash in production
+        # Don't fail in production, just warn
+        if os.getenv("ENVIRONMENT") == "production":
+            print("Running in production mode - Tesseract OCR disabled")
+        else:
+            raise Exception("Tesseract initialization failed. Please check installation.")
 else:
     # Linux/Unix - try to find tesseract in PATH
     try:
-        # Try multiple common Linux Tesseract paths
-        possible_paths = [
-            "/usr/bin/tesseract",
-            "/usr/local/bin/tesseract",
-            "/opt/homebrew/bin/tesseract"
-        ]
-        
-        tesseract_found = False
-        for path in possible_paths:
-            if os.path.exists(path):
-                pytesseract.pytesseract.tesseract_cmd = path
-                try:
-                    version = pytesseract.get_tesseract_version()
-                    print(f"Tesseract version: {version} found at {path}")
-                    tesseract_found = True
-                    break
-                except:
-                    continue
-        
-        if not tesseract_found:
-            # Try PATH
-            try:
-                version = pytesseract.get_tesseract_version()
-                print(f"Tesseract version: {version} found in PATH")
-            except Exception as e:
-                print(f"Error initializing Tesseract: {str(e)}")
-                print("Running in production mode - Tesseract OCR disabled")
-                # Don't crash in production
-                pass
+        version = pytesseract.get_tesseract_version()
+        print(f"Tesseract version: {version}")
     except Exception as e:
         print(f"Error initializing Tesseract: {str(e)}")
-        print("Running in production mode - Tesseract OCR disabled")
-        # Don't crash in production
-        pass
+        if os.getenv("ENVIRONMENT") == "production":
+            print("Running in production mode - Tesseract OCR disabled")
+        else:
+            print("Tesseract not found in PATH")
 
 # Initialize FastAPI app
-print("=== CREATING FASTAPI APP ===")
 app = FastAPI()
-print("=== FASTAPI APP CREATED ===")
-
-# Root endpoint for healthcheck
-print("=== DEFINING ROOT ENDPOINT ===")
-@app.get("/")
-async def root():
-    print("=== ROOT ENDPOINT CALLED ===")
-    return {"message": "Division Orderly Backend API", "status": "healthy"}
-print("=== ROOT ENDPOINT DEFINED ===")
 
 # Get allowed origins from environment or use defaults
-ALLOWED_ORIGINS = []
-if os.getenv("ALLOWED_ORIGINS"):
-    # Handle single URL or comma-separated URLs
-    origins = os.getenv("ALLOWED_ORIGINS").split(",")
-    ALLOWED_ORIGINS.extend([origin.strip() for origin in origins])
-else:
-    # Default origins for development
-    ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
-
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
 if os.getenv("VERCEL_URL"):
     # Add Vercel preview URLs
     ALLOWED_ORIGINS.append(f"https://{os.getenv('VERCEL_URL')}")
@@ -158,8 +63,6 @@ if os.getenv("FRONTEND_URL"):
     ALLOWED_ORIGINS.append(os.getenv("FRONTEND_URL"))
 
 print(f"Allowed CORS origins: {ALLOWED_ORIGINS}")
-print(f"Frontend URL: {os.getenv('FRONTEND_URL')}")
-print(f"ALLOWED_ORIGINS env var: {os.getenv('ALLOWED_ORIGINS')}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -179,6 +82,55 @@ print(f"Dashboard data directory: {DASHBOARD_DATA_DIR}")
 PDF_STORAGE_DIR = pathlib.Path(__file__).parent / "pdf_storage"
 PDF_STORAGE_DIR.mkdir(exist_ok=True)
 print(f"PDF storage directory: {PDF_STORAGE_DIR}")
+
+def generate_pdf_filename(operator: str, entity: str, wells: list) -> str:
+    """
+    Generate a PDF filename based on the format: Entity - DO - Operator - Well Name(s)
+    If multiple wells, use the first well name or 'Multiple Wells'
+    """
+    # Clean and sanitize the inputs
+    def sanitize_filename(text: str) -> str:
+        if not text:
+            return "Unknown"
+        # Remove or replace invalid filename characters
+        invalid_chars = '<>:"/\\|?*&()[]{}#%+=!@$^~`'
+        for char in invalid_chars:
+            text = text.replace(char, '_')
+        # Remove extra spaces and replace with underscores
+        text = '_'.join(text.split())
+        # Remove multiple consecutive underscores
+        while '__' in text:
+            text = text.replace('__', '_')
+        # Remove leading/trailing underscores
+        text = text.strip('_')
+        # Limit length to avoid filesystem issues
+        return text[:50]
+    
+    # Sanitize inputs
+    clean_entity = sanitize_filename(entity)
+    clean_operator = sanitize_filename(operator)
+    
+    # Determine well name(s)
+    if not wells or len(wells) == 0:
+        well_name = "No_Wells"
+    elif len(wells) == 1:
+        well_name = sanitize_filename(wells[0].get('name', wells[0].get('wellName', 'Unknown_Well')))
+    else:
+        well_name = "Various"
+    
+    # Generate filename: Entity_DO_Operator_WellName.pdf
+    filename = f"{clean_entity}_DO_{clean_operator}_{well_name}.pdf"
+    
+    # Ensure filename is not too long (Windows has 255 char limit)
+    if len(filename) > 200:
+        # Truncate each part proportionally
+        max_part_length = 40
+        clean_entity = clean_entity[:max_part_length]
+        clean_operator = clean_operator[:max_part_length]
+        well_name = well_name[:max_part_length]
+        filename = f"{clean_entity}_DO_{clean_operator}_{well_name}.pdf"
+    
+    return filename
 
 # Initialize Claude client
 api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -563,13 +515,16 @@ async def upload_file(file: UploadFile = File(...)):
                     json.dump(parsed_data, f, indent=2)
                 print(f"Saved parsed data to: {parsed_debug_path}")
                 
+                # Keep original filename for now - renaming will be done on sign page
+                final_pdf_path = file.filename
+                
                 response_data = {
                     "success": True,
                     "data": parsed_data,
                     "is_scanned": is_scanned,
-                    "original_pdf_path": file.filename
+                    "original_pdf_path": final_pdf_path
                 }
-                print(f"Returning response with original_pdf_path: {file.filename}")
+                print(f"Returning response with original_pdf_path: {final_pdf_path}")
                 print(f"Full response: {json.dumps(response_data, indent=2)}")
                 return response_data
                 
@@ -682,12 +637,15 @@ async def upload_multiple_files(files: list[UploadFile] = File(...)):
                             json.dump(parsed_data, f, indent=2)
                         print(f"Saved parsed data to: {parsed_debug_path}")
                         
+                        # Keep original filename for now - renaming will be done on sign page
+                        final_pdf_path = file.filename
+                        
                         results.append({
                             "fileName": file.filename,
                             "success": True,
                             "data": parsed_data,
                             "is_scanned": is_scanned,
-                            "original_pdf_path": file.filename
+                            "original_pdf_path": final_pdf_path
                         })
                         
                         print(f"Successfully processed {file.filename}")
@@ -777,6 +735,9 @@ async def deploy_to_dashboard(data: dict):
         for record in records_with_pdfs:
             print(f"  - {record.get('propertyName', 'Unknown')}: {record.get('originalPdfPath')}")
         
+        # Assign a batch id so records from the same upload can be grouped
+        batch_id = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+
         # Clean decimal interests and normalize state in new records
         for record in new_records:
             if 'decimalInterest' in record:
@@ -796,6 +757,7 @@ async def deploy_to_dashboard(data: dict):
             current_time = datetime.now()
             record['dateScannedIn'] = current_time.strftime("%Y-%m-%d")
             print(f"Added scan date for {record.get('propertyName', 'Unknown')}: {record['dateScannedIn']}")
+            record['uploadBatchId'] = batch_id
         
         # Ensure the dashboard data directory exists
         if not DASHBOARD_DATA_DIR.exists():
@@ -922,15 +884,13 @@ async def get_dashboard_data():
         if not json_files:
             return {"records": []}
         
-        # Prioritize the main file if it exists
-        main_file = DASHBOARD_DATA_DIR / "dashboard_data_main.json"
-        if main_file.exists():
-            latest_file = str(main_file)
-            print(f"Using main file: {latest_file}")
-        else:
-            # Fall back to most recent file
-            latest_file = max(json_files, key=lambda x: os.path.getctime(x))
-            print(f"Using most recent file: {latest_file}")
+        # Always use the main dashboard file
+        main_file = str(DASHBOARD_DATA_DIR / "dashboard_data_main.json")
+        if main_file not in json_files:
+            return {"error": "Main dashboard file not found"}
+        
+        latest_file = main_file
+        print(f"Using main dashboard file: {latest_file}")
         
         with open(latest_file, 'r') as f:
             data = json.load(f)
@@ -967,14 +927,12 @@ async def update_dashboard_record(data: dict):
         if not json_files:
             return {"error": "No dashboard data found"}
         
-        # Prioritize the main file if it exists
-        main_file = os.path.join(DASHBOARD_DATA_DIR, "dashboard_data_main.json")
-        if os.path.exists(main_file):
-            file_path = main_file
-        else:
-            # Fall back to most recent file
-            latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
-            file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
+        # Always use the main dashboard file
+        main_file = "dashboard_data_main.json"
+        if main_file not in json_files:
+            return {"error": "Main dashboard file not found"}
+        
+        file_path = os.path.join(DASHBOARD_DATA_DIR, main_file)
         
         with open(file_path, 'r') as f:
             records = json.load(f)
@@ -1001,7 +959,7 @@ async def update_dashboard_record(data: dict):
         return {"error": str(e)}
 
 @app.delete("/api/dashboard/delete")
-async def delete_record(index: int = Query(..., description="Index of record to delete")):
+async def delete_record(index: int):
     print("=" * 50)
     print("DELETE REQUEST RECEIVED!")
     print("=" * 50)
@@ -1021,18 +979,14 @@ async def delete_record(index: int = Query(..., description="Index of record to 
             print("No JSON files found")
             raise HTTPException(status_code=404, detail="No dashboard data found")
             
-        # Always use the main dashboard data file
-        if 'dashboard_data_main.json' in json_files:
-            latest_file = 'dashboard_data_main.json'
-        else:
-            # Fallback: use the most recent file
-            try:
-                latest_file = max(json_files, key=lambda x: os.path.getctime(os.path.join(DASHBOARD_DATA_DIR, x)))
-            except Exception as e:
-                print(f"Error finding latest file with getctime: {e}")
-                # Fallback: use the last file alphabetically
-                latest_file = sorted(json_files)[-1]
-                print(f"Using fallback method, latest file: {latest_file}")
+        # Always use the main dashboard file
+        main_file = "dashboard_data_main.json"
+        if main_file not in json_files:
+            print(f"Main dashboard file {main_file} not found")
+            raise HTTPException(status_code=404, detail="Main dashboard file not found")
+        
+        latest_file = main_file
+        print(f"Using main dashboard file: {latest_file}")
         
         file_path = os.path.join(DASHBOARD_DATA_DIR, latest_file)
         print(f"Using file: {file_path}")
@@ -1097,9 +1051,13 @@ async def deduplicate_dashboard():
         if not json_files:
             return {"error": "No dashboard data found"}
         
-        # Use the most recent file
-        latest_file = max(json_files, key=lambda x: os.path.getctime(x))
-        print(f"Deduplicating file: {latest_file}")
+        # Always use the main dashboard file
+        main_file = str(DASHBOARD_DATA_DIR / "dashboard_data_main.json")
+        if main_file not in json_files:
+            return {"error": "Main dashboard file not found"}
+        
+        latest_file = main_file
+        print(f"Deduplicating main dashboard file: {latest_file}")
         
         # Load records
         with open(latest_file, 'r') as f:
@@ -1198,8 +1156,7 @@ async def get_pdf_file(filename: str):
         print(f"Error serving PDF file {filename}: {str(e)}")
         raise HTTPException(status_code=500, detail="Error serving PDF file")
 
+
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8000))
-    print(f"Starting server on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port) 
+    uvicorn.run(app, host="0.0.0.0", port=8000) 

@@ -1,0 +1,458 @@
+{
+  "operator": "Pioneer Natural Resources USA, Inc.",
+  "entity": "Pioneer Natural Resources USA, Inc.",
+  "state": "Texas",
+  "effectiveDate": "8/26/2025",
+  "wells": [
+    {
+      "propertyName": "DONALD L HUTT FEE #63",
+      "propertyDescription": "ALL SEC 15, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #64",
+      "propertyDescription": "ALL SEC 15, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #65",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #66",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #67",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #68",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #69",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #70R",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #71",
+      "propertyDescription": "ALL SEC 15, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #72",
+      "propertyDescription": "ALL SEC 15, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #74",
+      "propertyDescription": "ALL SEC 15, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #75",
+      "propertyDescription": "ALL SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #76",
+      "propertyDescription": "ALL SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #77",
+      "propertyDescription": "ALL SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #78",
+      "propertyDescription": "ALL SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #80",
+      "propertyDescription": "ALL SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #81",
+      "propertyDescription": "ALL SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #84",
+      "propertyDescription": "ALL SEC 20, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #85",
+      "propertyDescription": "ALL SEC 20, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #86",
+      "propertyDescription": "ALL SEC 46, BLK 38, T3S, T&P SVY/ MRS SE SHACKELFORD SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #88",
+      "propertyDescription": "ALL SEC 46, BLK 38, T3S, T&P SVY/ MRS SE SHACKELFORD SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #90",
+      "propertyDescription": "ALL SEC 46, BLK 38, T3S, T&P SVY/ MRS SE SHACKELFORD SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #91",
+      "propertyDescription": "ALL SEC 46, BLK 38, T3S, T&P SVY/ MRS SE SHACKELFORD SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #92",
+      "propertyDescription": "ALL SEC 46, BLK 38, T3S, T&P SVY/ MRS SE SHACKELFORD SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #96",
+      "propertyDescription": "ALL SEC 18, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #97",
+      "propertyDescription": "ALL SEC 18, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE #99",
+      "propertyDescription": "ALL SEC 18, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1501H",
+      "propertyDescription": "ALL SEC 15, SEC 46, & SEC 19, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1502H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1503H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1504H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1505H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1506H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1507H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1508H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1509H",
+      "propertyDescription": "ALL SEC 15(SHL) & 18(BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1510H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1511H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1512H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1513H",
+      "propertyDescription": "ALL SEC 15 (SHL) & 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1514H",
+      "propertyDescription": "ALL SEC 15 (SHL) & SEC 18 (BHL), BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1515H",
+      "propertyDescription": "ALL SEC 15 (SHL) & SEC 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1516H",
+      "propertyDescription": "ALL SEC 15 (SHL) & SEC 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1518H",
+      "propertyDescription": "ALL SEC 15 (SHL) & SEC 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1520H",
+      "propertyDescription": "ALL SEC 15 (SHL) & SEC 18 (BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1601H",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1602H",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1603H",
+      "propertyDescription": "ALL SEC 16, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 1605H",
+      "propertyDescription": "ALL SEC 16(SHL) & 17(BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4504H",
+      "propertyDescription": "ALL SEC 45 (SHL) & SEC 20 (BHL), BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4510H",
+      "propertyDescription": "ALL SHL: 1665' FEL & 285' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY; BHL: 1771' FEL & 2541' FNL SEC 20, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4512H",
+      "propertyDescription": "ALL SHL: 1625' FEL & 285' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY; BHL: 7' FEL & 2539' FNL SEC 20, BLK 38, T3S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 46, BLK 38, SVY MRS S E SHACKELFORD",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4601H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4602H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4603H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4604H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4605H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL), BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4606H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S; T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4607H",
+      "propertyDescription": "ALL SEC 46 & SEC 19, BLK 38, T3S, T&P SVY, ALSO TRAVERSING THROUGH SEC 26, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4608H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4609H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4610H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4611H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE 4612H",
+      "propertyDescription": "ALL SEC 46(SHL) & SEC 19(BHL); BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE E 4505H",
+      "propertyDescription": "ALL SHL: 1295' FEL & 315' FNL SEC 45, BLK 38, T3S, T&P SVY; BHL: 1413' FEL & 2542' FNL SEC 20, BLK 38, T3S, T&P SVY",
+      "decimalInterest": "0.00028962",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE F 4506H",
+      "propertyDescription": "ALL SHL: 1250' FEL & 315' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY; BHL: 540' FEL & 2557' FNL SEC 20, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00028962",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE K 4511H",
+      "propertyDescription": "ALL SHL: 1645' FEL & 285' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY; BHL: 926' FEL & 2504' FNL SEC 20, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00028963",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20M 13H",
+      "propertyDescription": "ALL SHL: 1440' FWL & 1429' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 137' FWL & 102' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 25, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20N 14H",
+      "propertyDescription": "ALL SHL: 1460' FWL & 1429' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 989' FWL & 99' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20O 15H",
+      "propertyDescription": "ALL SHL: 1480' FWL & 1429' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 1774' FWL & 102' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20P 16H",
+      "propertyDescription": "ALL SHL: 1500' FWL & 1429' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 2647' FWL & 107' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20S 19H",
+      "propertyDescription": "ALL SHL: 1365' FWL & 1260' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 553' FWL & 110' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20T 20H",
+      "propertyDescription": "ALL SHL: 1410' FWL & 1260' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 1373' FWL & 273' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DONALD L HUTT FEE W20U 21H",
+      "propertyDescription": "ALL SHL: 1455' FWL & 1260' FSL SEC 20, BLK 38, T3S, T&P RR CO SVY; BHL: 2207' FWL & 105' FNL SEC 45, BLK 38, T3S, T&P RR CO SVY",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "SHACKELFORD DEAN TR 41",
+      "propertyDescription": "ALL ALL SEC 38, BLK 38, T3S, T&P",
+      "decimalInterest": "0.00027686",
+      "county": "Midland"
+    }
+  ]
+}

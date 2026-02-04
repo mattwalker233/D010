@@ -1,0 +1,22 @@
+```json
+{
+    "operator": "PIONEER NATURAL RESOURCES USA, INC.",
+    "entity": "BLUE SKY MINERALS LP",
+    "state": "Texas",
+    "effectiveDate": "Current Production",
+    "wells": [
+        {
+            "propertyName": "PRESTON 9DD 204H",
+            "propertyDescription": "SHL: 406' FSL & 1067' FWL SEC 9, BLK 37, T4S, T&P RR CO SVY; BHL: 2550' FNL & 336' FWL SEC 28, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING SEC 16 & 21, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00048012",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "PRESTON 9DE 205H",
+            "propertyDescription": "SHL: 376' FSL & 1067' FWL SEC 9, BLK 37, T4S, T&P RR CO SVY; BHL: 2551' FNL & 1534' FWL SEC 28, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING SEC 16 & 21, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00048048",
+            "county": "Midland"
+        }
+    ]
+}
+```

@@ -1,0 +1,412 @@
+```json
+{
+    "operator": "Pioneer Natural Resources USA, Inc.",
+    "entity": "DALE LAND & MINERALS LLC",
+    "state": "Texas",
+    "effectiveDate": "August 26, 2025",
+    "wells": [
+        {
+            "propertyName": "DONALD L HUTT C #10",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #11",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #12",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #14",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #18",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #19",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #2",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #20",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #21R",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #22",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #23",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #24",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #25",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #26",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #27",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #28",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #29",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #3",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #30",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #31",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #32",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #33",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #34",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #35",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #36",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #37",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #38",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #4",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #41",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #42",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #44R",
+            "propertyDescription": "ALL SEC 14, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #46",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #47",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #49",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #5",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #50",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #51",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #52",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #53",
+            "propertyDescription": "ALL TAed: SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #54",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #55",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #58",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #59",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #6",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #61",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #62",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #67",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #7",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #70",
+            "propertyDescription": "ALL SEC 24, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #71",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #72",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #73",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #74",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #75",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #77",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #78",
+            "propertyDescription": "ALL SEC 36, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #8",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #80",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #81",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #82",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #83",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #84",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #85",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #87",
+            "propertyDescription": "ALL SEC 33, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #9",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #90",
+            "propertyDescription": "ALL SEC 21, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "DONALD L HUTT C #95",
+            "propertyDescription": "ALL SEC 11, BLK 38, T3S, T&P SVY",
+            "decimalInterest": "0.00030132",
+            "county": "Midland"
+        }
+    ]
+}
+```

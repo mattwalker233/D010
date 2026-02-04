@@ -1,0 +1,100 @@
+```json
+{
+    "operator": "HANNATHON PETROLEUM II, LLC",
+    "entity": "AR MIDLAND, LP",
+    "state": "TX",
+    "effectiveDate": "September 1, 2025",
+    "wells": [
+        {
+            "propertyName": "CANADIAN 1",
+            "propertyDescription": "SEC 20 BLK 34 T5S T&P RR CO",
+            "decimalInterest": "0.00173611",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "CANADIAN 2",
+            "propertyDescription": "SEC 20 BLK 34 T5S T&P RR CO",
+            "decimalInterest": "0.00173611",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "CANADIAN 3",
+            "propertyDescription": "SEC 20 BLK 34 T5S T&P RR CO",
+            "decimalInterest": "0.00173611",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "CANADIAN 4",
+            "propertyDescription": "SEC 20 BLK 34 T5S T&P RR CO",
+            "decimalInterest": "0.00173611",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "CANADIAN 5",
+            "propertyDescription": "SEC 20 BLK 34 T5S T&P RR CO",
+            "decimalInterest": "0.00173611",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 1 1H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078050",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 2 2H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078053",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 3 3H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078052",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 4 4H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078048",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 5 5H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078057",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 6 6H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078048",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 7 7H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078049",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 8 8H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078042",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 09 9H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078052",
+            "county": "GLASSCOCK"
+        },
+        {
+            "propertyName": "BODINE T 17-29 10 10H",
+            "propertyDescription": "SEC 17, 20, 29 BLK 34 T5S T&P RY. CO. SVY",
+            "decimalInterest": "0.00078044",
+            "county": "GLASSCOCK"
+        }
+    ]
+}
+```

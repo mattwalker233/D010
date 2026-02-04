@@ -1,0 +1,14 @@
+{
+  "operator": "COG OPERATING LLC",
+  "entity": "BLUE SKY MINERALS HOLDCO LLC",
+  "state": "TEXAS",
+  "effectiveDate": "Date of First Sales",
+  "wells": [
+    {
+      "propertyName": "BLAZE M6 502MH - BPO",
+      "propertyDescription": "TOWNSHIP: 58, SECTION: \u00a7, 44, BLOCK: 40, ABSTRAC: A-1398, SURVEY: T&P RR CO",
+      "decimalInterest": "0.00118330",
+      "county": "UPTON"
+    }
+  ]
+}

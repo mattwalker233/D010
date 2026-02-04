@@ -42,10 +42,17 @@ function SignPageContent() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [placeStickerOnEveryPage, setPlaceStickerOnEveryPage] = useState(false);
+  const [stickerPageSelection, setStickerPageSelection] = useState<'first' | 'every' | 'specific'>('first');
+  const [selectedStickerPage, setSelectedStickerPage] = useState(1);
+  const [renameOnly, setRenameOnly] = useState(false);
   const [rotation, setRotation] = useState(0); // 0, 90, 180, 270 degrees
   const [rotatedFile, setRotatedFile] = useState<File | null>(null);
   const [isRotating, setIsRotating] = useState(false);
   const [pdfDimensions, setPdfDimensions] = useState<{width: number, height: number} | null>(null);
+  
+  // Operator and Well information for PDF naming
+  const [operatorName, setOperatorName] = useState('');
+  const [wellName, setWellName] = useState('');
 
   const searchParams = useSearchParams();
 
@@ -224,6 +231,7 @@ function SignPageContent() {
     setPdfError(error?.message || 'Failed to load PDF file.');
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -244,6 +252,16 @@ function SignPageContent() {
       return;
     }
 
+    if (!operatorName.trim()) {
+      setError('Please enter an operator name');
+      return;
+    }
+
+    if (!wellName.trim()) {
+      setError('Please enter a well name');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false); // Clear any previous success message
@@ -252,6 +270,17 @@ function SignPageContent() {
       const formData = new FormData();
       formData.append('file', fileToSign);
       formData.append('entityId', selectedEntity.id);
+      formData.append('operatorName', operatorName);
+      formData.append('wellName', wellName);
+      
+      console.log('=== FRONTEND DEBUG ===');
+      console.log('Sending operatorName:', operatorName);
+      console.log('Sending wellName:', wellName);
+      console.log('Sending entityId:', selectedEntity.id);
+      console.log('Sending to backend:');
+      console.log('- operatorName:', operatorName);
+      console.log('- wellName:', wellName);
+      console.log('- entityId:', selectedEntity.id);
       
       // Add signature positions if any
       if (signaturePositions.length > 0) {
@@ -261,8 +290,13 @@ function SignPageContent() {
         console.log('No signature positions to send - PDF will be signed without signatures');
       }
       
-      // Add sticker placement option
+      // Add sticker placement options
       formData.append('placeStickerOnEveryPage', placeStickerOnEveryPage.toString());
+      formData.append('stickerPageSelection', stickerPageSelection);
+      formData.append('selectedStickerPage', selectedStickerPage.toString());
+      
+      // Add rename-only option
+      formData.append('renameOnly', renameOnly.toString());
 
       const response = await fetch('/api/sign-pdf', {
         method: 'POST',
@@ -276,11 +310,23 @@ function SignPageContent() {
       // Get the signed PDF as a blob
       const blob = await response.blob();
       
+      // Extract filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `signed_${fileToSign.name}`; // fallback
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+          console.log('Using filename from response:', filename);
+        }
+      }
+      
       // Create a download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `signed_${fileToSign.name}`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -416,6 +462,7 @@ function SignPageContent() {
     }
   };
 
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Sign Division Order</h1>
@@ -485,6 +532,48 @@ function SignPageContent() {
           </Combobox>
         </div>
 
+        {/* Operator and Well Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Operator Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={operatorName}
+              onChange={(e) => setOperatorName(e.target.value)}
+              placeholder="e.g., Blue Sky Minerals LP"
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Well Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={wellName}
+              onChange={(e) => setWellName(e.target.value)}
+              placeholder="e.g., Cherry Bomb 1-9"
+              required
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        
+        {/* Filename Preview */}
+        {selectedEntity && operatorName.trim() && wellName.trim() && (
+          <div className="bg-blue-50 p-3 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>PDF will be saved as:</strong> <span className="font-mono text-xs bg-blue-100 px-2 py-1 rounded">
+                {selectedEntity.entity_name} - DO - {operatorName.trim()} - {wellName.trim()}.pdf
+              </span>
+            </p>
+          </div>
+        )}
+
         {/* File Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -503,24 +592,103 @@ function SignPageContent() {
           />
         </div>
 
-        {/* Sticker Placement Option */}
+        {/* Sticker Placement Options */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Sticker Placement
+          </label>
+          
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <input
+                id="stickerFirst"
+                type="radio"
+                name="stickerPageSelection"
+                value="first"
+                checked={stickerPageSelection === 'first'}
+                onChange={(e) => setStickerPageSelection(e.target.value as 'first' | 'every' | 'specific')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <label htmlFor="stickerFirst" className="ml-2 block text-sm text-gray-700">
+                First page only
+              </label>
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                id="stickerEvery"
+                type="radio"
+                name="stickerPageSelection"
+                value="every"
+                checked={stickerPageSelection === 'every'}
+                onChange={(e) => setStickerPageSelection(e.target.value as 'first' | 'every' | 'specific')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <label htmlFor="stickerEvery" className="ml-2 block text-sm text-gray-700">
+                Every page
+              </label>
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                id="stickerSpecific"
+                type="radio"
+                name="stickerPageSelection"
+                value="specific"
+                checked={stickerPageSelection === 'specific'}
+                onChange={(e) => setStickerPageSelection(e.target.value as 'first' | 'every' | 'specific')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <label htmlFor="stickerSpecific" className="ml-2 block text-sm text-gray-700">
+                Specific page
+              </label>
+            </div>
+            
+            {stickerPageSelection === 'specific' && (
+              <div className="ml-6">
+                <label className="block text-sm text-gray-600 mb-1">
+                  Page number:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={numPages || 1}
+                  value={selectedStickerPage}
+                  onChange={(e) => setSelectedStickerPage(parseInt(e.target.value) || 1)}
+                  className="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-xs text-gray-500">
+                  (1-{numPages || 1})
+                </span>
+              </div>
+            )}
+          </div>
+          
+          <p className="mt-2 text-xs text-gray-500">
+            {stickerPageSelection === 'first' && "Sticker will be placed on the first page only"}
+            {stickerPageSelection === 'every' && "Sticker will be placed on all pages of the document"}
+            {stickerPageSelection === 'specific' && `Sticker will be placed on page ${selectedStickerPage} only`}
+          </p>
+        </div>
+
+        {/* Rename Only Option */}
         <div>
           <div className="flex items-center">
             <input
-              id="placeStickerOnEveryPage"
+              id="renameOnly"
               type="checkbox"
-              checked={placeStickerOnEveryPage}
-              onChange={(e) => setPlaceStickerOnEveryPage(e.target.checked)}
+              checked={renameOnly}
+              onChange={(e) => setRenameOnly(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="placeStickerOnEveryPage" className="ml-2 block text-sm text-gray-700">
-              Place sticker on every page
+            <label htmlFor="renameOnly" className="ml-2 block text-sm text-gray-700">
+              Rename PDF only (no entity sticker)
             </label>
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            {placeStickerOnEveryPage 
-              ? "Sticker will be placed on all pages of the document" 
-              : "Sticker will only be placed on the first page"}
+            {renameOnly 
+              ? "PDF will be renamed but no entity sticker will be added" 
+              : "PDF will be renamed and entity sticker will be added"}
           </p>
         </div>
 

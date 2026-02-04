@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiFile, FiRefreshCw, FiTrash2, FiDownload } from 'react-icons/fi';
 import * as ExcelJS from 'exceljs';
@@ -18,6 +18,7 @@ interface DashboardRecord {
   notes: string;
   dateScannedIn?: string;
   originalPdfPath?: string;
+  uploadBatchId?: string;
 }
 
 // State abbreviation mapping
@@ -182,6 +183,25 @@ const formatDecimalInterest = (decimalString: string): string => {
   return `0.${cleaned}`;
 };
 
+const getUploadGroupKey = (record: DashboardRecord): string => {
+  return record.uploadBatchId || record.dateScannedIn || 'unknown';
+};
+
+const getHueFromKey = (key: string): number => {
+  let hash = 0;
+  for (let i = 0; i < key.length; i += 1) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  }
+  return hash % 360;
+};
+
+const getRowStyle = (record: DashboardRecord): CSSProperties => {
+  const hue = getHueFromKey(getUploadGroupKey(record));
+  return {
+    backgroundColor: `hsl(${hue} 70% 96%)`
+  };
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const [records, setRecords] = useState<DashboardRecord[]>([]);
@@ -337,43 +357,32 @@ export default function Dashboard() {
   const handleDelete = async (index: number) => {
     try {
       console.log('Delete called with index:', index);
-      console.log('Filtered records length:', filteredRecords.length);
-      console.log('Original records length:', records.length);
+      console.log('Records length:', records.length);
       
       // Validate the index
-      if (index < 0 || index >= filteredRecords.length) {
-        throw new Error(`Invalid index: ${index}. Filtered records length: ${filteredRecords.length}`);
+      if (index < 0 || index >= records.length) {
+        throw new Error(`Invalid index: ${index}. Records length: ${records.length}`);
       }
 
-      // Get the record from the filtered array
-      const recordToDelete = filteredRecords[index];
+      // Get the record directly from the records array
+      const recordToDelete = records[index];
       
       if (!recordToDelete) {
         console.error('Record to delete is undefined. Index:', index);
-        console.error('Filtered records:', filteredRecords);
-        throw new Error('Record not found in filtered results');
+        console.error('Records:', records);
+        throw new Error('Record not found in records array');
       }
 
       console.log('Record to delete:', recordToDelete);
 
-      // Find the actual index in the original records array
-      const actualIndex = records.findIndex(record => 
-        record.propertyName === recordToDelete.propertyName &&
-        record.effectiveDate === recordToDelete.effectiveDate &&
-        record.entity === recordToDelete.entity
-      );
+      // Use the index directly since we're working with the original records array
+      const actualIndex = index;
 
-      console.log('Actual index found:', actualIndex);
+      console.log('Using index directly:', actualIndex);
       console.log('Total records:', records.length);
 
-      if (actualIndex === -1) {
-        console.error('Could not find record in original records array');
-        console.error('Looking for record:', recordToDelete);
-        throw new Error('Record not found in original records');
-      }
-
-      console.log('Sending delete request with actual index:', actualIndex);
-              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${actualIndex}`, {
+      console.log('Sending delete request with index:', actualIndex);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/dashboard/delete?index=${actualIndex}`, {
         method: 'DELETE',
       });
 
@@ -483,6 +492,7 @@ export default function Dashboard() {
       setExecutingIndex(null);
     }
   };
+
 
   const handleExportToExcel = async () => {
     try {
@@ -690,7 +700,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredRecords.map((record, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                    <tr
+                      key={index}
+                      className="transition duration-150 hover:brightness-95 filter"
+                      style={getRowStyle(record)}
+                    >
                       <td className="px-3 py-2 whitespace-nowrap">
                         {editingStatus[index] !== undefined ? (
                           <select
@@ -809,7 +823,7 @@ export default function Dashboard() {
                             <button
                               onClick={() => handleExecute(record, index)}
                               disabled={executingIndex === index}
-                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
                               title="Execute PDF (go to sign page)"
                             >
                               <FiFile className="h-4 w-4" />

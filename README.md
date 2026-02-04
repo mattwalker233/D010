@@ -23,7 +23,8 @@ A FastAPI-based backend service for processing division order PDFs with AI-power
 ```
 ├── main.py                 # FastAPI application entry point
 ├── requirements.txt        # Python dependencies
-├── railway.json           # Railway deployment configuration
+├── railway.toml           # Railway deployment configuration
+├── nixpacks.toml          # System deps for Railway/Nixpacks
 ├── .env.production.example # Production environment variables template
 ├── pdf_storage/           # PDF file storage
 ├── debug/                 # Debug logs and outputs
@@ -55,7 +56,7 @@ A FastAPI-based backend service for processing division order PDFs with AI-power
 
 This backend is configured for **Railway deployment**:
 
-1. **Connect to Railway**: The `railway.json` file contains the deployment configuration
+1. **Connect to Railway**: The `railway.toml` and `nixpacks.toml` files contain the deployment configuration
 2. **Environment Variables**: Set production environment variables in Railway dashboard
 3. **Automatic Deployment**: Railway will automatically deploy on git push
 

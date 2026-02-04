@@ -1,0 +1,26 @@
+{
+  "operator": "Neptune Operating LLC",
+  "entity": "DALE WILLISTON MINERALS 2011 LP",
+  "state": "ND",
+  "effectiveDate": "07/28/2025",
+  "wells": [
+    {
+      "propertyName": "CLERMONT 3-19-18-158N-100W-MBH",
+      "propertyDescription": "T158N - R100W - Sec. 18 & 19 - Spacing: 1268.16 - Effective Date: 2/4/2025",
+      "decimalInterest": "0.00032543",
+      "county": "WILLIAMS"
+    },
+    {
+      "propertyName": "CLERMONT 4-19-18-158N-100W-MBH",
+      "propertyDescription": "T158N - R100W - Sec. 18 & 19 - Spacing: 1268.16 - Effective Date: 2/4/2025",
+      "decimalInterest": "0.00032543",
+      "county": "WILLIAMS"
+    },
+    {
+      "propertyName": "CLERMONT 5-19-18-158N-100W-MBH",
+      "propertyDescription": "T158N - R100W - Sec. 18 & 19 - T158N - R101W - Sec. 13 & 24 - Spacing: 2548.16 - Effective Date: 2/12/2025",
+      "decimalInterest": "0.00016195",
+      "county": "WILLIAMS"
+    }
+  ]
+}

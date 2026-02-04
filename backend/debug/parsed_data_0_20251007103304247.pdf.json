@@ -1,0 +1,158 @@
+{
+  "operator": "PIONEER NATURAL RESOURCES USA, INC.",
+  "entity": "BLUE SKY MINERALS LP",
+  "state": "Texas",
+  "effectiveDate": "Current Production",
+  "wells": [
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "SEC 46, BLK 36, T4S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "SEC 46, BLK 36, T4S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "NW/4 SEC 10, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "NW/4 SEC 10, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "NE/4 & S/2 SEC 10, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "NE/4 & S/2 SEC 10, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "N/2 SEC 11, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "N/2 SEC 11, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "S/2 SEC 11, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "S/2 SEC 11, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "SEC 17, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "SEC 17, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "N/2 SEC 16, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "N/2 SEC 16, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "W/2 & NE/4 SEC 14, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "W/2 & NE/4 SEC 14, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "SE/4 SEC 14, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "DRIVER SPRA UNIT",
+      "propertyDescription": "SE/4 SEC 14, BLK 36, T5S, T&P, GLASSCOCK COUNTY",
+      "decimalInterest": "0.00800782",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "NEELY VERA B 2",
+      "propertyDescription": "SEC 11, BLK 36, T5S, T&P RR CO SVY",
+      "decimalInterest": "0.01250000",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "SPRABERRY DRIVER TR 19 DEAN",
+      "propertyDescription": "SEC 46, BLK 36, T4S, T&P",
+      "decimalInterest": "0.00800782",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "SPRABERRY DRIVER TR 64 DEAN",
+      "propertyDescription": "NE/4 & S/2 SEC 10, BLK 36, T5S, T&P",
+      "decimalInterest": "0.00800782",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "SPRABERRY DRIVER TR 82 DEAN",
+      "propertyDescription": "SEC 17, BLK 36, T5S, T&P",
+      "decimalInterest": "0.00800782",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "SPRABERRY DRIVER TR 83 DEAN",
+      "propertyDescription": "N/2 SEC 16, BLK 36, T5S, T&P",
+      "decimalInterest": "0.00800782",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "SPRABERRY DRIVER TR 88 DEAN",
+      "propertyDescription": "W/2 & NE/4 SEC 14, BLK 36, T5S, T&P",
+      "decimalInterest": "0.00800782",
+      "county": "Glasscock"
+    },
+    {
+      "propertyName": "W A BIGBY B #4",
+      "propertyDescription": "SEC 17, BLK 36, T5S, T&P SVY",
+      "decimalInterest": "0.00800782",
+      "county": "Glasscock"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+I've analyzed the document, but it appears to be a repeated header or contact information for ALLDALE MINERALS, LP without containing the full division order details. The document doesn't include information about wells, property descriptions, decimal interests, or effective dates.
+
+Here's what I can extract from the available information:
+
+```json
+{
+    "operator": "Dale Operating Company",
+    "entity": "ALLDALE MINERALS, LP",
+    "state": "TX",
+    "effectiveDate": "",
+    "wells": []
+}
+```
+
+The document shows ALLDALE MINERALS, LP is represented by Dale Operating Company as attorney-in-fact, with Steve Abney as Co-CEO. The entity is located in Dallas, TX. However, the document doesn't contain any well information, property descriptions, decimal interests, or an effective date that would be needed for a complete division order analysis.

@@ -1,0 +1,302 @@
+{
+  "operator": "COMSTOCK OIL AND GAS, LP",
+  "entity": "MUDBUGS AD5 LLC",
+  "state": "LOUISIANA",
+  "effectiveDate": "Last Settlement Date",
+  "wells": [
+    {
+      "propertyName": "HORN ALBERT 1 - ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NASH THELMA 3 (PA'D 7-22-11)",
+      "propertyDescription": "400 ACRES, M/L, BEING THE N/2 OF SECTIONS 19 AND 20-12N-16W, DESOTO PARISH, LA (HOSS SUXX).",
+      "decimalInterest": "0.00358423",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NASH THELMA 1",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (JETER SU61), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00238663",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE ESTATE 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (JETER SU61), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00243914",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NORWOOD 1 FKA FONVILLE 1",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "CARAWAY ESTATE 1",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (PET SU60), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00251257",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE ESTATE 2-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HOSS SUXX), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00243914",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NORWOOD 2 - ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 1 - ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NORWOOD 3 - ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "HORN ALBERT 2 - ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NORWOOD A2 - ALT FKA NORWOOD 4-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "LOFTIN 1 -ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WARREN 1 -ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NORWOOD 4 - ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "ADAMS 1 -ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (CV RA SUV), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00717703",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "CARAWAY ESTATE 2 FKA 2-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HOSS SUYY), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00717703",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "VALMAC 2 - ALT FKA SHAHAN 1-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "HORN A 1-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "MOSLEY 1 ALT AKA MOSELEY 1 ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WARREN 2 - ALT (PA'D 5-21-18)",
+      "propertyDescription": "640 ACRES, M/L, ALL OF SECTION 22-12N-16W, DESOTO PARISH, LA (HOSS SUAA).",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "VALMAC 1-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "SHULL 1",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (CV RA SUV), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00717703",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "HORN B 1",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HOSS SUAA), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00250000",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "NASH THELMA 7 - ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (CV RA SUV), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00717703",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE 201 -ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (CV RA SUV), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00717703",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "CARAWAY ESTATE HZ 3",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE 20 HZ 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE JAMES 19 HZ 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 22 HZ 1-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "JOHNSON 22 HZ 1",
+      "propertyDescription": "SECTION 22 TOWNSHIP12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "JOHNSON 22 HZ 2-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 22 HZ 2-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 22 HZ 3-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "JOHNSON 22 HZ 3-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE JAMES 20 HZ 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE 20 HZ 2-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 22 HZ 5-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 22 HZ 4-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE JAMES 19 HZ 3-ALT",
+      "propertyDescription": "SECTION 19 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "MATTHEWS 20 HZ 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "MATTHEWS 20 HZ 2-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WAYNESTELLA REALTY 20 HZ 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WAYNESTELLA REALTY 20 HZ 2-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "PACE JAMES 19 HZ 4-ALT",
+      "propertyDescription": "SECTION 19 TOWNSHIP 12N RANGE 16W (HA RA SUN), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "CARAWAY EST 20 - 29 HC 1-ALT",
+      "propertyDescription": "SECTION 20 TOWNSHIP 12N RANGE 16W (HA RA SUN) & SECTION 29 TOWNSHIP 12 RANGE 16W (HA RA SUPP), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00024267",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "WHITTEN 22-15-10 HC 2-ALT",
+      "propertyDescription": "SECTION 22 TOWNSHIP 12N RANGE 16W (HA RA SURR), SECTION 15 TOWNSHIP 12N RANGE 16W (HA RA SUA) & SECTION 10 TOWNSHIP 12N RANGE 16W (HA RA SUK), DESOTO PARISH, LOUISIANA",
+      "decimalInterest": "0.00012168",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "HA RA SUN - LOGANSPORT",
+      "propertyDescription": "",
+      "decimalInterest": "0.00358463",
+      "county": "DESOTO"
+    },
+    {
+      "propertyName": "HA RA SURR - LOGANSPORT",
+      "propertyDescription": "",
+      "decimalInterest": "0.00374339",
+      "county": "DESOTO"
+    }
+  ]
+}

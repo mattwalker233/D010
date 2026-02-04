@@ -1,0 +1,44 @@
+{
+  "operator": "Pioneer Natural Resources USA, Inc.",
+  "entity": "ExxonMobil",
+  "state": "Texas",
+  "effectiveDate": "8/26/2025",
+  "wells": [
+    {
+      "propertyName": "SHACKELFORD W31A 1H",
+      "propertyDescription": "SHL: 1370' FWL & 280' FSL SEC 38, BLK 38, T3S, T&P RR CO SVY; BHL: 721' FWL & 432' FSL SEC 3, BLK 38, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 31, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00016128",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "SHACKELFORD W31B 2H",
+      "propertyDescription": "SHL: 1370' FWL & 310' FSL SEC 38, BLK 38, T3S, T&P RR CO SVY; BHL: 1529' FWL & 103' FSL SEC 3, BLK 38, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 31, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00015642",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "SHACKELFORD W31C 3H",
+      "propertyDescription": "SHL: 1370' FWL & 340' FSL SEC 38, BLK 38, T3S, T&P RR CO SVY; BHL: 2297' FWL & 105' FSL SEC 3, BLK 38, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 31, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00015642",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "SHACKELFORD W31D 4H",
+      "propertyDescription": "SHL: 570' & 375' FSL SEC 38, BLK 38, T3S, T&P RR CO SVY; BHL: 317' FWL & 112' FSL SEC 3, BLK 38, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 31, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00015420",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "SHACKELFORD W31E 5H",
+      "propertyDescription": "SHL: 600' & 375' FSL SEC 38, BLK 38, T3S, T&P RR CO SVY; BHL: 1132' FWL & 106' FSL SEC 3, BLK 38, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 31, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00015412",
+      "county": "Midland"
+    },
+    {
+      "propertyName": "SHACKELFORD W31F 6H",
+      "propertyDescription": "SHL: 630' & 375' FSL SEC 38, BLK 38, T3S, T&P RR CO SVY; BHL: 1942' FWL & 102' FSL SEC 3, BLK 38, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 31, BLK 38 T3S, SVY T&P RR CO",
+      "decimalInterest": "0.00015482",
+      "county": "Midland"
+    }
+  ]
+}

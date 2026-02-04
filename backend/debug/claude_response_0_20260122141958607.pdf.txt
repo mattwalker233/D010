@@ -1,0 +1,40 @@
+```json
+{
+    "operator": "PIONEER NATURAL RESOURCES USA, INC.",
+    "entity": "AR MIDLAND LP",
+    "state": "Texas",
+    "effectiveDate": "FIRST PRODUCTION",
+    "wells": [
+        {
+            "propertyName": "SHACKELFORD-FREEMAN 10D 204H",
+            "propertyDescription": "SHL: 1797' FSL & 697\" FWL SEC 10, BLK 37, T4S, T&P RR CO SVY; BHL: 102' FSL & 340\" FWL SEC 27, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 15 & 22, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00169539",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "SHACKELFORD-FREEMAN 10E 205H",
+            "propertyDescription": "SHL: 1797\" FSL & 727 FWL SEC 10, BLK 37, T4S, T&P RR CO SVY; BHL: 100' FSL & 1454' FWL SEC 27, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 15 & 22, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00169735",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "SHACKELFORD-FREEMAN 10K 211H",
+            "propertyDescription": "SHL: 2014' FNL & 2160' FEL SEC 10, BLK 37, T4S, T&P RR CO SVY; BHL: 100' FSL & 1582' FEL SEC 27, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 15 & 22, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00168538",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "SHACKELFORD-FREEMAN 10L 212H",
+            "propertyDescription": "SHL: 2015' FNL & 2130' FEL SEC 10, BLK 37, T4S, T&P RR CO SVY; BHL: 101' FSL & 479' FEL SEC 27, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 15 & 22, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00167169",
+            "county": "Midland"
+        },
+        {
+            "propertyName": "SHACKELFORD-FREEMAN 10F 206H",
+            "propertyDescription": "SHL: 1798' FSL & 757\" FWL SEC 10, BLK 37, T4S, T&P RR CO SVY; BHL: 99' FSL & 2572' FWL SEC 27, BLK 37, T4S, T&P RR CO SVY, ALSO TRAVERSING THROUGH SEC 15 & 22, BLK 37, T4S, T&P RR CO SVY",
+            "decimalInterest": "0.00169866",
+            "county": "Midland"
+        }
+    ]
+}
+```
