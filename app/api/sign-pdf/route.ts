@@ -599,7 +599,7 @@ export async function POST(request: Request) {
     console.log('Temporary file created:', tempFilePath);
 
     // Return the modified PDF
-    return new NextResponse(modifiedPdfBytes, {
+    return new NextResponse(Buffer.from(modifiedPdfBytes), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${newFilename}"`,
