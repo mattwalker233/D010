@@ -196,30 +196,28 @@ export default function EntitiesPage() {
       {loading ? (
         <div className="text-center py-8">Loading...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex flex-wrap justify-center gap-4">
           {entities.map((entity) => (
-            <div key={entity.id} className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold mb-2">{entity.entity_name}</h3>
+            <div key={entity.id} className="bg-white p-4 rounded-lg shadow-md w-80 text-center">
+              <h3 className="text-base font-semibold mb-3">{entity.entity_name}</h3>
               {entity.sticker_info && (
-                <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm font-medium text-yellow-800 mb-1">Sticker Info:</p>
-                  <p className="text-sm text-yellow-700">{entity.sticker_info}</p>
+                <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-center">
+                  <p className="text-xs text-yellow-700 whitespace-pre-line leading-tight">{entity.sticker_info}</p>
                 </div>
               )}
               {entity.signature && (
-                <div className="mb-2">
-                  <p className="text-gray-600 mb-1">Signature:</p>
+                <div className="mb-3 flex justify-center">
                   <img 
                     src={entity.signature} 
                     alt="Signature" 
-                    className="max-w-full max-h-24 object-contain border border-gray-200 rounded"
+                    className="max-w-full max-h-20 object-contain"
                     style={{ width: 'auto', height: 'auto' }}
                   />
                 </div>
               )}
               <button
                 onClick={() => handleDeleteEntity(entity.id)}
-                className="mt-4 text-red-500 hover:text-red-700"
+                className="text-red-500 hover:text-red-700 text-sm"
               >
                 Delete
               </button>
