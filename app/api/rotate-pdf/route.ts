@@ -113,7 +113,7 @@ export async function POST(request: Request) {
     console.log('Rotation completed successfully');
 
     // Return the rotated PDF
-    return new NextResponse(rotatedPdfBytes, {
+    return new NextResponse(Buffer.from(rotatedPdfBytes), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="rotated_${file.name}"`,
