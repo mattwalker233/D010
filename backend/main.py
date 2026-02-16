@@ -53,16 +53,14 @@ else:
 # Initialize FastAPI app
 app = FastAPI()
 
-# Get allowed origins from environment or use defaults
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
-if os.getenv("VERCEL_URL"):
-    # Add Vercel preview URLs
-    ALLOWED_ORIGINS.append(f"https://{os.getenv('VERCEL_URL')}")
-if os.getenv("FRONTEND_URL"):
-    # Add custom frontend URL
-    ALLOWED_ORIGINS.append(os.getenv("FRONTEND_URL"))
+# Simple CORS: allow Vercel frontend and localhost
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "https://d010.vercel.app",
+]
 
-print(f"Allowed CORS origins: {ALLOWED_ORIGINS}")
+print(f"CORS enabled for: {ALLOWED_ORIGINS}")
 
 # Add CORS middleware
 app.add_middleware(
