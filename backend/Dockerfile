@@ -25,4 +25,4 @@ ENV TESSERACT_PATH=/usr/bin/tesseract
 EXPOSE 8000
 
 # Start the application - Railway will set $PORT automatically
-CMD ["/bin/sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
+CMD ["/bin/sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
