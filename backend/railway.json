@@ -5,7 +5,6 @@
     "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "numReplicas": 1,
-    "startCommand": "bash entrypoint.sh"
+    "numReplicas": 1
   }
 }
