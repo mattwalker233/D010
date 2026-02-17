@@ -24,5 +24,5 @@ ENV TESSERACT_PATH=/usr/bin/tesseract
 # Expose port
 EXPOSE 8000
 
-# Start the application - Railway will set $PORT automatically
-CMD ["/bin/sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
+# Start the application with gunicorn (what was working before)
+CMD ["/bin/sh", "-c", "gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"] 
