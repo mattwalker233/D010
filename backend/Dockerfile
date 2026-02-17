@@ -24,6 +24,5 @@ ENV TESSERACT_PATH=/usr/bin/tesseract
 # Expose port
 EXPOSE 8000
 
-# Make entrypoint script executable and set as startup command
-RUN chmod +x entrypoint.sh
-CMD ["bash", "entrypoint.sh"] 
+# Start the application - Railway will set $PORT automatically
+CMD ["/bin/sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
