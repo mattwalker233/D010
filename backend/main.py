@@ -132,6 +132,14 @@ def generate_pdf_filename(operator: str, entity: str, wells: list) -> str:
 
 # Initialize Claude client
 api_key = os.getenv("ANTHROPIC_API_KEY")
+if not api_key or api_key == "your_api_key_here" or api_key.strip() == "":
+    print("WARNING: ANTHROPIC_API_KEY is not set or is a placeholder!")
+    print("Set ANTHROPIC_API_KEY environment variable before deploying to production.")
+    if os.getenv("ENVIRONMENT") == "production":
+        raise ValueError("ANTHROPIC_API_KEY must be set in production environment")
+    else:
+        print("Running in development mode with missing API key. API calls will fail.")
+
 claude = anthropic.Anthropic(api_key=api_key)
 
 # Define system prompt for Claude
