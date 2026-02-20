@@ -24,5 +24,6 @@ ENV TESSERACT_PATH=/usr/bin/tesseract
 # Expose port
 EXPOSE 8000
 
-# Start the application with gunicorn - use PORT env var for Railway
-CMD ["sh", "-c", "gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000}"] 
+# Use entrypoint script for proper PORT handling
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"] 
