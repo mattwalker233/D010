@@ -135,12 +135,11 @@ api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key or api_key == "your_api_key_here" or api_key.strip() == "":
     print("WARNING: ANTHROPIC_API_KEY is not set or is a placeholder!")
     print("Set ANTHROPIC_API_KEY environment variable before deploying to production.")
-    if os.getenv("ENVIRONMENT") == "production":
-        raise ValueError("ANTHROPIC_API_KEY must be set in production environment")
-    else:
-        print("Running in development mode with missing API key. API calls will fail.")
-
-claude = anthropic.Anthropic(api_key=api_key)
+    print("PDF processing will fail but app will still start for health checks.")
+    claude = None
+else:
+    claude = anthropic.Anthropic(api_key=api_key)
+    print("Anthropic API key configured successfully.")
 
 # Define system prompt for Claude
 system_prompt = """You are a specialized assistant for extracting information from division orders. Your task is to analyze the provided text and extract specific information into a JSON object.
@@ -425,8 +424,19 @@ def extract_text_from_pdf(pdf_content: bytes) -> str:
         print(traceback.format_exc())
         raise
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Railway."""
+    return {
+        "status": "ok",
+        "anthropic_configured": claude is not None,
+        "tesseract_available": True if os.popen("which tesseract").read().strip() else False
+    }
+
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
+    if claude is None:
+        raise HTTPException(status_code=503, detail="PDF processing unavailable: ANTHROPIC_API_KEY not configured on server")
     try:
         print(f"\n=== Processing PDF Upload ===")
         print(f"Received file: {file.filename}")
@@ -566,6 +576,8 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.post("/api/upload-multiple")
 async def upload_multiple_files(files: list[UploadFile] = File(...)):
+    if claude is None:
+        raise HTTPException(status_code=503, detail="PDF processing unavailable: ANTHROPIC_API_KEY not configured on server")
     try:
         print(f"\n=== Processing Multiple PDF Upload ===")
         print(f"Received {len(files)} files")
