@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 PORT=${PORT:-8000}
-echo "Starting gunicorn on port $PORT"
-exec gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --access-logfile - --error-logfile -
+echo "Starting uvicorn on port $PORT"
+exec uvicorn main:app --host 0.0.0.0 --port $PORT
