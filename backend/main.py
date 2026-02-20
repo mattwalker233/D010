@@ -479,7 +479,7 @@ async def upload_file(file: UploadFile = File(...)):
                 for attempt in range(max_retries):
                     try:
                         message = claude.messages.create(
-                            model="claude-3-7-sonnet-20250219",
+                            model="claude-3-5-sonnet-20241022",
                             max_tokens=15000,  # Increased from 4000 to handle large documents
                             temperature=0,
                             system=system_prompt,
@@ -619,7 +619,7 @@ async def upload_multiple_files(files: list[UploadFile] = File(...)):
                     print("Sending text to Claude for processing...")
                     try:
                         message = claude.messages.create(
-                            model="claude-3-7-sonnet-20250219",
+                            model="claude-3-5-sonnet-20241022",
                             max_tokens=15000,
                             temperature=0,
                             system=system_prompt,
