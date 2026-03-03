@@ -53,12 +53,18 @@ else:
 # Initialize FastAPI app
 app = FastAPI()
 
-# Simple CORS: allow Vercel frontend and localhost
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-    "https://d010.vercel.app",
-]
+# CORS: read from env var, fall back to known origins
+_cors_env = os.getenv("ALLOWED_ORIGINS", "")
+if _cors_env:
+    ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()]
+else:
+    ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://d010.vercel.app",
+        "https://division-orderly.vercel.app",
+        "https://division-orderly-mwalker-3991s-projects.vercel.app",
+    ]
 
 print(f"CORS enabled for: {ALLOWED_ORIGINS}")
 
