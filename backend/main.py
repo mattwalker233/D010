@@ -1181,6 +1181,72 @@ async def get_pdf_file(filename: str):
         raise HTTPException(status_code=500, detail="Error serving PDF file")
 
 
+# ---------------------------------------------------------------------------
+# Plat document reader endpoint
+# ---------------------------------------------------------------------------
+try:
+    from plat_reader import read_plat
+    _plat_reader_available = True
+    print("Plat reader module loaded successfully.")
+except Exception as _plat_import_err:
+    _plat_reader_available = False
+    print(f"WARNING: Plat reader unavailable: {_plat_import_err}")
+
+
+@app.post("/api/plat/upload")
+async def upload_plat(file: UploadFile = File(...)):
+    """
+    Upload a plat document (PDF) and extract legal descriptions,
+    Section/Township/Range data, ownership boundaries, and acreage.
+
+    Returns a JSON object with per-page extractions and a merged summary.
+    """
+    if not _plat_reader_available:
+        raise HTTPException(status_code=503, detail="Plat reader unavailable: check server config")
+    if claude is None:
+        raise HTTPException(status_code=503, detail="Plat reader unavailable: ANTHROPIC_API_KEY not configured")
+
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+
+    ext = file.filename.rsplit(".", 1)[-1].lower()
+    if ext not in ("pdf",):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+
+    try:
+        pdf_bytes = await file.read()
+        print(f"\n=== Plat Reader: processing '{file.filename}' ({len(pdf_bytes)} bytes) ===")
+
+        result = read_plat(pdf_bytes)
+
+        page_count = len(result.get("pages", []))
+        desc_count = len(result.get("summary", {}).get("legal_descriptions", []))
+        print(f"Plat extraction complete: {page_count} pages, {desc_count} legal descriptions found.")
+
+        return {
+            "filename": file.filename,
+            "pages_processed": page_count,
+            **result,
+        }
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        import traceback
+        print(f"Plat reader error: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Plat extraction failed: {str(e)}")
+
+
+@app.get("/api/plat/status")
+async def plat_status():
+    """Check plat reader availability."""
+    return {
+        "available": _plat_reader_available,
+        "anthropic_configured": claude is not None,
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 
